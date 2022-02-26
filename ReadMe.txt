@@ -1,0 +1,4 @@
+Provides a number of OBS-Studio Text(GDI+) Sources which display the event information from DiveRecorder (DR) onto the event video stream.  Uses the data provided by DR's DR2Video software.  Automatically checks the DR2Video files
+and if change detected displays the new information.   Has the capability to automatically hide the dive information banner and re-display it when DR file changes detected.  Works for both Individual events and Synchro events.
+May get updated someday to work for simultanious events (A & B) as DR2Video has this capability but likley never to be updated for a skills circuit!  May also get updated to display Start Lists and Rankings when I've learnt enough Lua!!
+Needs to use Mono Type of fixed length fonts.  Else award alignment will be wrong and some data may be outside the video display area. 
