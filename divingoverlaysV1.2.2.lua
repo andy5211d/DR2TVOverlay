@@ -3,42 +3,54 @@ Open Broadcaster Software
 
 OBS > Tools > Scripts
 
-OBS Lua Script
+OBS Lua Script - DR2TVOverlay
 
-Provides a number of OBS-Studio Text(GDI+) Sources which display the event information from DiveRecorder (DR) onto the event video stream.  Uses the data provided by DR's DR2Video software.  Automatically checks the DR2Video files
-and if change detected displays the new information.   Has the capability to automatically hide the dive information banner and re-display it when DR file changes detected.  Works for both Individual events and Synchro events.
-May get updated someday to work for simultanious events (A & B) as DR2Video has this capability but likley never to be updated for a skills circuit!  May also get updated to display Start Lists and Rankings when I've learnt enough Lua!!
-Needs to use Mono Type of fixed length fonts.  Else award alignment will be wrong and some data may be outside the video display area. 
+Provides a number of OBS-Studio Text(GDI+) Sources which display the event information from DiveRecorder (DR) onto the event video stream.  Uses the data provided by DR's 
+DR2Video software.  Automatically checks the DR2Video files and if change detected displays the new information.   Has the capability to automatically hide the dive 
+information banner and re-display it when DR file changes detected.  Works for both Individual events and Synchro events.  May get updated someday to work for simultanious
+events (A & B) as DR2Video has this capability but likley never to be updated for a skills circuit!  May also get updated to display Start Lists and Rankings when I've learnt
+enough Lua!!  Needs to use Mono Type of fixed length fonts.  Else award alignment will be wrong and some data may be outside the video display area. 
 
 
-  V0.13.1 2021-11-21  Clean re-code of original concepts (V0.1.0 - V0.13.0) based on original OBS addon 'textmonitor.lua'.  Still does not generate the banner Source Text(GDI+) in code!   Soon, I think I know how but.....
+  V0.13.1 2021-11-21  Clean re-code of original concepts (V0.1.0 - V0.13.0) based on original OBS addon 'textmonitor.lua'.  Still does not generate the banner Source Text(GDI+)
+                      in code!   Soon, I think I know how but.....
   V1.0.0  2021-11-27  First version out in the wild!  Now only uses two lines of text at the bottom of the screen.  Includes BD logo at the start of the banner
-  V1.0.1  2021-11-30  Judge awards now in individual text cells and Synchro Judge role labels added.  With auto resize of display for synchro awards.  Now needs refactoring as original concept changed so now OBS Source names not representative of content.
-  V1.1.1  2021-12-03  Refactored with new concept as TVbanner, visability now triggered by DR text file changes.  Judge awards Text Source name now hard coded into script!  Else this would require far too many user text source selections and text source groups to be viable for user input, (some 28, and a very very particular size, font & screen location for each.  Will make the full OBS Source abcde.json available for users in GitLab/GitHub, sometime...).
-  V1.1.2  2021-12-07  Group Scene fade introduced for the Banner.  May need more than one fade routine to work correctly as banner is more than one group.  Still neeeds a major sort out as little oop used (cus I don't realy understand Lua)!
+  V1.0.1  2021-11-30  Judge awards now in individual text cells and Synchro Judge role labels added.  With auto resize of display for synchro awards.  Now needs refactoring as
+                      original concept changed so now OBS Source names not representative of content.
+  V1.1.1  2021-12-03  Refactored with new concept as TVbanner, visability now triggered by DR text file changes.  Judge awards Text Source name now hard coded into script!  
+                      Else this would require far too many user text source selections and text source groups to be viable for user input, (some 28, and a very very particular
+                      size, font & screen location for each.  Will make the full OBS Source abcde.json available for users in GitLab/GitHub, sometime...).
+  V1.1.2  2021-12-07  Group Scene fade introduced for the Banner.  May need more than one fade routine to work correctly as banner is more than one group.  Still neeeds a major
+                      sort out as little oop used (cus I don't realy understand Lua)!
   V1.1.3  2021-12-29  Fade delay added for banner display and banner removal (does not work - removed!)
-  V1.1.4  2022-01-09  Dummy file read added (and deletion) as a flag to read DR Dive/Synchro.txt text file for the new data. (Not yet implemented in DR2Video though, so commented out)
-  V1.1.5  2022-01-15  New display format and methodology.  Two lines and thus variables only (lineOne & lineTwo) and data inserted into blank line at required locations.  Previous methodology uses four display variables, two per line, (displayName, displayLine1, displayDescription, displayLine2). Display of Judge Awards remains unchanged as each a seperate Text Source group!!
+  V1.1.4  2022-01-09  Dummy file read added (and deletion) as a flag to read DR Dive/Synchro.txt text file for the new data. (Not yet implemented in DR2Video though, so 
+                      commented out)
+  V1.1.5  2022-01-15  New display format and methodology.  Two lines and thus variables only (lineOne & lineTwo) and data inserted into blank line at required locations.
+                      Previous methodology uses four display variables, two per line, (displayName, displayLine1, displayDescription, displayLine2). Display of Judge Awards
+                      remains unchanged as each a seperate Text Source group!!
   V1.1.6  2022-01-29  Ranking now generated when Diver and Round complete, eg. Diver 10/10  Round 6/6.  Need to insert ranking into Source Text(GDI+)
   V1.1.7  2022-01-31  Just a tidy-up of previous and addition of delay before Ranking displayed.
   V1.1.8  2022-02-02  Cleaning up the way it works now we have an update file to trigger file read
   V1.1.9  2022-02-03  Changed Text(GDI+) Source names to be more meaningfull as well as variables within the script.
   V1.2.0  2022-02-04  Second version, for National Cup test.  9 judge synchro not well displayed as gap between E4 and S1
   V1.2.1  2022-02-10  Changes to Synchro award box labels to differentate bbetween 9 judge and 11 judge
-  V1.2.2  2022-02-17  Ranking display removed from display.  Code left for now.
+  V1.2.2  2022-02-17  Ranking display removed from display (does not work).  Code left in for now.
   
 
 *** Things of note ***
 1. On start-up sometimes old dive data or judge awards shown.   Sorted if the 'Recorder' does a screen refresh
-2. Need to select 'Synchro Event' in script setting for this to work correctly.  In theory as we have two Update files (Individual and Synchro) the script could select appropoate way of working automatically.
+2. Need to select 'Synchro Event' in script setting for this to work correctly.  In theory as we have two Update files (Individual and Synchro) the script could select 
+   appropoate way of working automatically.
 3. Text(GDI+) source names are no longer meaningfull.
 4. The user setting for 'DR File Check Interval' may be removed in future.
-5. For those happy to modify the script, change the file location example to one related to your log-in ID.  Else need to be selected all five file location on each start-up!
-6. For initial configuration it is usefull to be able to generate the two Update files so that their Windows location can be selected in the script user settings
+5. For those happy to modify the script, change the file location example to one related to your log-in ID.  Else need to be selected all five file location on each update!
+6. For initial configuration it is usefull to be able to generate the two Update text files so that their Windows location can be selected in the scripts user settings
+7. TVBanner = TVOverlay!
 
   The position of data elements in the Dive/Synchro.txt and the Rank.txt strings from DR2Video.
-  In Dive/Synchro there are two lines of text in these DR files. First line of the DR file (which would be split_string1[n]) is headers and not generated or used by this script. The second line becomes split_string2[n] 
-  and get processed and displayed as the video overlay. The rank file data is put into an 2d array (arrRank[][]) with the Diver as the first and his/her/their data as the second vairable
+  In Dive/Synchro there are two lines of text in these DR files. First line of the DR file (which would be split_string1[n]) is headers and not generated or used by this script.
+  The second line becomes split_string2[n] and get processed and displayed as the video overlay. The rank file data is put into an 2d array (arrRank[][]) with the Diver as the
+  first and his/her/their data as the second vairable
       Name:            split_string2[1]                                           Rank            arrRank[Diver][1]
       Team:            split_string2[2]                                           Name            arrRank[Diver][2]
       Dive:            split_string2[3]                                           Team            arrRank[Diver][3]
@@ -948,7 +960,7 @@ end
 -- A function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data</h></center>
-             <p>Display diver and scores from DiveRecorder for individual and synchro events.  DR2Video text file & path must be entered for individual events (Dive.txt) and for synchro events (Synchro.txt).  Dummy files (DUpdate.txt & SUpdate.txt) needs to be entered to trigger an update of the DR data .txt files.  Lastly a rank file (Rank.txt) needs to be entered for the Rank display at end of event.  The approporate OBS Source .json file must be Imported for this video banner overlay to function correctly.  </p><p>Andy - V1.2.2 2022Feb24</p>]]
+             <p>Display diver and scores from DiveRecorder for individual and synchro events.  DR2Video text file & path must be entered for individual events (Dive.txt) and for synchro events (Synchro.txt).  Dummy files (DUpdate.txt & SUpdate.txt) needs to be entered to trigger an update of the DR data .txt files.  Lastly a rank file (Rank.txt) needs to be entered for the Rank display at end of event.  The approporate OBS Source .json file must be Imported for this video banner overlay to function correctly.  </p><p>Andy - V1.2.2 2022Feb27</p>]]
 end
 
 -- A function named script_properties defines the properties that the user can change for the entire script module itself
