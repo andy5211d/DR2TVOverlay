@@ -1041,18 +1041,12 @@ end
 
 -- A function named "script_defaults" will be called to set the default settings
 function script_defaults(settings)
---[[
-    obs.obs_data_set_default_string(settings, "textFileI", "C:/Users/BSEvent/Desktop/mdt/temp/Dive.txt")
-    obs.obs_data_set_default_string(settings, "textFileS", "C:/Users/BSEvent/Desktop/mdt/temp/Synchro.txt")
-    obs.obs_data_set_default_string(settings, "textFileR", "C:/Users/BSEvent/Desktop/mdt/temp/Rank.txt")
-    obs.obs_data_set_default_string(settings, "textFileDI", "C:/Users/BSEvent/Desktop/mdt/temp/DUpdate.txt")
-    obs.obs_data_set_default_string(settings, "textFileDS", "C:/Users/BSEvent/Desktop/mdt/temp/SUpdate.txt")
-    --]]
-    obs.obs_data_set_default_string(settings, "textFileI", "C:/Users/The Trust/Documents/OBS/mdt/temp/Dive.txt")
-    obs.obs_data_set_default_string(settings, "textFileS", "C:/Users/The Trust/Documents/OBS/mdt/temp/Synchro.txt")
-    obs.obs_data_set_default_string(settings, "textFileR", "C:/Users/The Trust/Documents/OBS/mdt/temp/Rank.txt")
-    obs.obs_data_set_default_string(settings, "textFileDI", "C:/Users/The Trust/Documents/OBS/mdt/temp/DUpdate.txt")
-    obs.obs_data_set_default_string(settings, "textFileDS", "C:/Users/The Trust/Documents/OBS/mdt/temp/SUpdate.txt")
+
+    obs.obs_data_set_default_string(settings, "textFileI", "C:/Users/<your Username>/Documents/OBS/mdt/temp/Dive.txt")
+    obs.obs_data_set_default_string(settings, "textFileS", "C:/Users/<your Username>/Documents/OBS/mdt/temp/Synchro.txt")
+    obs.obs_data_set_default_string(settings, "textFileR", "C:/Users/<your Username>/Documents/OBS/mdt/temp/Rank.txt")
+    obs.obs_data_set_default_string(settings, "textFileDI", "C:/Users/<your Username>/Documents/OBS/mdt/temp/DUpdate.txt")
+    obs.obs_data_set_default_string(settings, "textFileDS", "C:/Users/<your Username>/Documents/OBS/mdt/temp/SUpdate.txt")
 
     obs.obs_data_set_default_string(settings, "sourcelineOne", "")
     obs.obs_data_set_default_string(settings, "sourcelineTwo", "")
