@@ -9,7 +9,7 @@ Provides a number of OBS-Studio Text(GDI+) Sources which displays the event info
 DR2Video software.  Automatically checks for the *Update files and if detected displays the new information.   Has the capability to automatically hide the dive 
 information banner and re-display it when DR file changes detected.  Works for both Individual events and Synchro events and a vairable number of judges.  May get updated someday to work for simultanious events (A & B) as DR2Video has this capability but never likley to be updated for a skills circuit! 
 
-  V2.0.0  2022-03-19  Video overlay changed to be two seperate overlays.   Event info on overlay and perminately displayed and dive description or awards for the main overlay
+  V2.0.0  2022-04-08  Video overlay changed to be two seperate overlays, event info and dive data.   Event info on overlay and perminately displayed at the top and dive description or awards for the main overlay
 
 *** Things of note ***
 1. Need to select 'Synchro Event' in script setting for this to work correctly.  In theory as we have two Update files (Individual and Synchro) the script could select 
@@ -55,6 +55,7 @@ information banner and re-display it when DR file changes detected.  Works for b
       No Rounds:       split_string2[27]
       No Divers:       split_string2[28]
 --]]
+
 local obs = obslua
 local textFile, textFileI, textFileS  -- textfile = the text file to be processed.  textFileI = the Individual event text file name (and file location) to be checked, then read into textFile.  Simmulary textFileS the Synchro event text file
 local textFileDI  -- DR dummy text file to act as new data trigger for individual events
@@ -65,8 +66,8 @@ local dinterval, debug  -- dinterval = time to display the TV overlay after upda
 local activeId = 0 -- active file check id's
 local current = {} -- current user values to compare with next user update.  Not used (I think!), left over from original 'textmonitor.lua' script
 
--- Why just TVBanner, what about the other text sources? Is this needed?
 local source = obs.obs_get_source_by_name("TVBanner") -- disable TVBanner source group
+-- Why just TVBanner, what about the other text sources? Is this needed?
 if source ~= nil then
     obs.obs_source_set_enabled(source, false)
     if debug then
@@ -80,7 +81,7 @@ local function update(k, v)
     -- first line of data(k) in the DR text file not used --
     if v then -- Is second line of data(v) present? Just checking again!
         local result = {} -- empty array where we will store data from the DR2Video text files
-        local delimiter = ("|") -- DR text string delimiter chr, can be a "," (if user has not changed DR2Video defaults)
+        local delimiter = ("|") -- DR text string delimiter chr, likly be a "," if user has not changed DR2Video defaults
         for match in (line2 .. delimiter):gmatch("(.-)" .. delimiter) do -- fill the array
             table.insert(result, match)
         end
@@ -416,7 +417,8 @@ local function update(k, v)
             elseif split_string2[4] == "D" then position = (", free")
             end
             sourcelineTwo = (split_string2[7] .. position)          
-            display2b = "!"  -- as above!
+            display2b = "!"
+            display2a = "!"
             lineTwo = string.insert(lineTwo, sourcelineTwo, 0)
 
             obs.timer_add( function() remove_TVbanner() end,  dinterval )   -- hide overlay after timer period             
@@ -636,10 +638,9 @@ local function update(k, v)
         obs.obs_data_release(settings)
         obs.obs_source_release(source)
     end
-        
-    
     
 end -- update(k, v)
+
 
 local function checkFile(id)
     -- if the lua script has reloaded then stop any old timers and return
@@ -861,7 +862,7 @@ end
 -- A function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data</h></center>
-             <p>Display diver and scores from DiveRecorder for individual and synchro events.  DR2Video text file & path must be entered for individual events (Dive.txt) and for synchro events (Synchro.txt).  Trigger file locations (DUpdate.txt & SUpdate.txt) need to be entered to trigger an update of the DR data .txt files.  The approporate OBS Source .json file must be imported into OBS for this video overlay to function correctly.  </p><p>Andy - V2.0.0 2022Mar19</p>]]
+             <p>Display diver and scores from DiveRecorder for individual and synchro events.  DR2Video text file & path must be entered for individual events (Dive.txt) and for synchro events (Synchro.txt).  Trigger file locations (DUpdate.txt & SUpdate.txt) need to be entered to trigger an update of the DR data .txt files.  The approporate OBS Source .json file must be imported into OBS for this video overlay to function correctly.  </p><p>Andy - V2.0.0 2022Apr08</p>]]
 end
 
 -- A function named script_properties defines the properties that the user can change for the entire script module itself
