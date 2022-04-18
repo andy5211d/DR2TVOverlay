@@ -15,5 +15,4 @@ location needs to be entered into the DR2TVOverlay script fields.  An example fi
 will not work without modification by the user for thier particular computer set-up.
 
 TO DO: Need to provide a full set of instructions as a number of OBS Source's and file locations need to be set-up by the user 
-for first run.  All the set-up information is retained by OBS for future runs and does not need to be re-entered.  Some
-HotKeys to start, stop, clear etc, would be usefull for the user!
+for first run.  All the set-up information is retained by OBS for future runs and does not need to be re-entered.
