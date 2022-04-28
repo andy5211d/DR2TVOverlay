@@ -12,7 +12,8 @@ to work for simultanious events (A & B) as DR2Video has this capability but neve
 
   V2.0.0  2022-04-10  Video overlay changed to be two seperate overlays, event info and dive data.   Event info an overlay and perminately displayed at the top.  Dive description 
   or awards for the main overlay and removed between each dive (user selectable)  End if the event all overlays automatically removed (if selected).
-  V2.0.1  2022-04-27  Country and club flags added.  HotKeys added but don't do anything yet!
+  V2.0.1  2022-04-28  Country and club flags added.  HotKeys added but don't do anything yet!
+
 
 *** Things of note ***
 1. For a Synchro event need to select 'Synchro Event' in script setting for this to work correctly.  In theory as we have two Update files (Individual and Synchro) the script could select 
@@ -73,7 +74,7 @@ pause_overlay_hotkey_id    = obs.OBS_INVALID_HOTKEY_ID
 remove_overlays_hotkey_id  = obs.OBS_INVALID_HOTKEY_ID
 clear_overlays_hotkey_id   = obs.OBS_INVALID_HOTKEY_ID
 
-
+--[[
 local source = obs.obs_get_source_by_name("TVBanner") -- disable TVBanner source group
 -- Why just TVBanner, what about the other text sources? Is this needed?
 if source ~= nil then
@@ -83,6 +84,7 @@ if source ~= nil then
     end
 end
 obs.obs_source_release(source)
+--]]
 
 -- called when an update to the DR text file is detected.  Process DR data in the file then display and for a user determined period if Overlay hide option not disabled.
 local function update(k, v)
@@ -94,13 +96,13 @@ local function update(k, v)
             table.insert(result, match)
         end
         split_string2 = result -- generates an array with 28 entries from line 2 of the DR text file (line 1 which is headers not used)
-        if split_string2[28] ~= nil then -- check if NIL as split_string() can't handle NIL or empty field
+        if split_string2[28] ~= nil then -- check if empty field
             split_string2[28] = string.sub(split_string2[28], 1, -2) -- CR present at end of each DR text line so remove from the last field [28] else Lua gets upset when displaying the last field
         end    
     end
     if split_string2[21] == ("") then 
       split_string2[21] = (" ")
-      obs.script_log(obs.LOG_INFO, string.format("Nul detected in Rank "))
+      obs.script_log(obs.LOG_INFO, string.format("Nil detected in Rank "))
     end
     eventComplete = false
     
@@ -126,14 +128,14 @@ local function update(k, v)
     lineTwo = ("                                                  ") -- set overlay display text line 2 to 50 spaces
     tvBanner_removed = false -- as we are about to display dive data or awards!
 
-    -- generate country flag or club logo file info from split_string[22].  This is a local flag file not from the website outlined above in notes
+    -- generate country flag or club logo file info from split_string[22].  This is a local flag file not from the website outlined above in notes as not yet implemented
     local flag_file = split_string2[22]
     if debug then
         obs.script_log(obs.LOG_INFO, string.format("Flag File = " .. flag_file))
     end
     local ft, err = io.open(flag_file, "rb") --try to open the flag file, if exists then use it else use BDLogo as default
     if not ft then
-        flag_file = ("C:\\Users\\The Trust\\Documents\\OBS\\flags\\BDLogo.png")
+        flag_file = ("C:\\Users\\<your_id>\\Documents\\OBS\\flags\\BDLogo.png")  -- this location will be a problem for other users!!! need to change string returned by DR2Video to use BDLogo.png
     else
         ft:close()
     end
@@ -932,7 +934,7 @@ end
 -- A function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data</h></center>
-             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  DR2Video text file & path must be entered for individual events (Dive.txt) and for synchro events (Synchro.txt).  Trigger file locations (DUpdate.txt & SUpdate.txt) need to be entered to trigger an update of the DR data .txt files.  The approporate OBS Source .json file must be imported into OBS for this video overlay to function correctly.  </p><p>Andy - V2.0.1 2022Apr27</p>]]
+             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  DR2Video text file & path must be entered for individual events (Dive.txt) and for synchro events (Synchro.txt).  Trigger file locations (DUpdate.txt & SUpdate.txt) need to be entered to trigger an update of the DR data .txt files.  The approporate OBS Source .json file must be imported into OBS for this video overlay to function correctly.  </p><p>Andy - V2.0.1 2022Apr28</p>]]
 end
 
 -- A function named script_properties defines the properties that the user can change for the entire script module itself
