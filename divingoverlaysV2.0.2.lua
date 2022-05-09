@@ -146,7 +146,8 @@ local function update(k, v)
         ft:close()
     end
 
-    local source = obs.obs_get_source_by_name("Flag") -- Divers country flag or club logo insert into overlay.
+    -- Divers country flag or club logo insert into overlay.
+    local source = obs.obs_get_source_by_name("Flag") 
     if source ~= nil then
         local settings = obs.obs_data_create()
         obs.obs_data_set_string(settings, "file", flag_file)
@@ -998,7 +999,7 @@ local function init()
     -- only proceed if there is a text file selected
     if not textFile then
         return nil
-    end -- this may not work as textFile is allocated to either textFileI or textFileS dependent upon synchro settings.  Thus one file check should always be true!
+    end -- this may not work as textFile is filled by either textFileI or textFileS dependent upon synchro settings.  Thus one file check should always be true!
 
     -- start the timer id to check the text file
     local id = activeId
