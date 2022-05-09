@@ -1,5 +1,0 @@
-Location to store national Flag and Club logo files.   
-
-DR2TVOverlay will eventually be updated to pull national flags directly off the web however club flags are not easley accessable on the web.  
-To pull flags directly off the web DR2TVOverlay will need to convert the FINA country code to the ISO country codes so as to be compatable 
-with the flag web sites.  Currently DR2TVOverlay does not do this.
