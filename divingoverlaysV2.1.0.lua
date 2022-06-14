@@ -16,7 +16,8 @@
 **    V2.0.1  2022-04-28  Country and club flags added.  HotKeys added but don't do anything yet!
 **    V2.0.2  2022-05-08  Event overlay can switch between two positions by Hotkey toggle action.  Needs new JSON source import to work.
 **    V2.0.3  2022-05-30  Added permanent display option of overlays for TV company's overlay management (not yet working, use V2.0.2b).  Updated to prevent error when update file has no flag file name.
-**    V2.1.0  2022-06-13  Hotkey assignments now implemented by code.  Lots of minor improvements.  Auto-hide of Event overlay removed, use Hotkeys to remove all at the end of an event.
+**    V2.1.0  2022-06-14  Hotkey assignments now implemented by code and shown in a realtime status dock.  Lots of minor improvements.  Auto-hide of Event overlay removed, now use Hotkeys to
+**            remove all overlays at the end of an event.
 **
 **  *** Things of note ***
 **  1. For a Synchro event need to select 'Synchro Event' in script settings for this to work correctly.  In theory as we have two Update files (Individual and Synchro) the script could select 
@@ -66,22 +67,22 @@
 local obs = obslua
 local textFile, textFileI, textFileS, textFileI_B, textFileS_B  -- textfile = the text file to be processed.  textFileI = the Individual event text file name (and file location) to be checked, then read into textFile.  Simmulary textFileS the Synchro event text file
 local textFileD, textFileDI, textFileDS, textFileDI_B, textFileDS_B   -- DR dummy text file to act as new data trigger. Simmulary for B event
-local interval = 1000  -- interval(ms) = time between update file checks.
-local dinterval  -- dinterval = the time to display the TV overlay after update
+local interval = 1000  -- (ms), time between update file checks
+local dinterval  -- the time to display the TV overlay after update
 local debug  -- turn on or off debug information display in the Log
 local synchro = false  -- default is Individual event
 local event = "Event 1"  -- default location for Event source overlay
 local eventB = false -- switch for using Event B data
-local activeId = 0 -- active file check id's, incremented for each programme paramater change
-local current = {} -- current file values to compare with next file update.
-local togglevar1, togglevar2, togglevar3, togglevar4, togglevar5 = true, true, true, true, true  -- to aid Hotkey Toggle functions
+local activeId = 0 -- active file check id's, incremented for each programme paramater change or script initiated re-start
+local current = {} -- current data file values to compare with next file update
+local togglevar1, togglevar3 = false, false  -- to aid Hotkey Toggle functions
 local disableUpdate = false -- as it says!
 local eventComplete = false -- as it says!
 local tvBanner_removed = false -- is or is not the banner being displayed?
 local fileContentsChanged = true  -- has the data file changed since the last update flag?
 local hideDisable = false  -- default is to hide overlays after timeout
 
-htk_1 = obs.OBS_INVALID_HOTKEY_ID  -- seems to work just as well without these declarations but all online inf says to do this so go for it!
+htk_1 = obs.OBS_INVALID_HOTKEY_ID  -- seems to work just as well without these declarations but all on-line inf says to do this so go for it!
 htk_2 = obs.OBS_INVALID_HOTKEY_ID
 htk_3 = obs.OBS_INVALID_HOTKEY_ID
 htk_4 = obs.OBS_INVALID_HOTKEY_ID
@@ -90,14 +91,17 @@ htk_6 = obs.OBS_INVALID_HOTKEY_ID
 htk_7 = obs.OBS_INVALID_HOTKEY_ID
 htk_8 = obs.OBS_INVALID_HOTKEY_ID
 
--- called when an update to the DR text file is detected.  Process DR data in the file then display and for a user determined period, if Overlay hide option not disabled.
+-- called when an update to the DR text file is detected.  Process DR data in the file then display and for a user determined period if Overlay hide option not disabled.
 local function update(k, v)
-    -- first line of data(k) in the DR text file, not used by this script 
+    -- first line in the DR text file [data(k)], not used by this script 
     obs.script_log(obs.LOG_INFO, string.format("start update(k, v)"))    -- show in log what is happening
     obs.script_log(obs.LOG_INFO, string.format("Event Complete? %s", eventComplete))
     obs.script_log(obs.LOG_INFO, string.format("tvBanner Removed? %s", tvBanner_removed))
-    obs.script_log(obs.LOG_INFO, string.format("File contents changed? %s", fileContentsChanged))  
-    if eventComplete and tvBanner_removed and not fileContentsChanged then  -- try to stop the banner re-displaying when showing rankings    
+    obs.script_log(obs.LOG_INFO, string.format("File contents changed? %s", fileContentsChanged))      
+    obs.script_log(obs.LOG_INFO, string.format("hideDisable: %s", hideDisable))
+    obs.script_log(obs.LOG_INFO, string.format("synchro: %s", synchro))
+    obs.script_log(obs.LOG_INFO, string.format("eventB: %s", eventB))
+    if eventComplete and tvBanner_removed and not fileContentsChanged then  -- try to stop the banner re-displaying when showing rankings.  Hmm, is this really doing what it says?
         return
     end
 
@@ -474,8 +478,7 @@ local function update(k, v)
         end
 
 --  >>>>> Individual event <<<<<<
-    else
-            --  >>>> *** As NOT a Synchro event assume only 5 or 7 judges for individual events, rest of J fields must be 'blank'.  Use awards line blank space for BannerLine2 data  *** <<<<
+    else            --  >>>> *** As NOT a Synchro event assume only 5 or 7 judges for individual events, rest of J fields must be 'blank'.  Use awards line blank space for BannerLine2 data  *** <<<<
         if split_string2[16] ~= (" ") then -- then nothing in J9 award position so assume individual event and disable the 9 & 11 synchro judge role labels
                                            -- should not have got to this point if Synchro but no harm in checking the awards to confirm!
             local source = obs.obs_get_source_by_name("SynchroJLabels11") -- disable synchro11 judge role labels
@@ -705,7 +708,7 @@ function string.insert(str1, str2, pos)
 end -- string.insert()
 
 
-function toggle_event_position(pressed)  -- Hotkey to toggle Event overlay position, F12
+function toggle_event_position(pressed)  -- F12 Hotkey to toggle Event overlay position
     -- Hotkey to toggle between the two event overlay positions
     if not pressed then
      return
@@ -721,7 +724,7 @@ function toggle_event_position(pressed)  -- Hotkey to toggle Event overlay posit
            end
        end
        obs.obs_source_release(source)
-       local source = obs.obs_get_source_by_name("Event 1") -- disable text Source (Event group)ee
+       local source = obs.obs_get_source_by_name("Event 1") -- disable text Source (Event group)
        if source ~= nil then
            obs.obs_source_set_enabled(source, false)
            if debug then
@@ -729,14 +732,22 @@ function toggle_event_position(pressed)  -- Hotkey to toggle Event overlay posit
            end
        end
        obs.obs_source_release(source)
-       local source = obs.obs_get_source_by_name("Event_Position") -- Event type: Individual
+       local source = obs.obs_get_source_by_name("Position1") -- disable event icon Source
        if source ~= nil then
-        local settings = obs.obs_data_create()
-        obs.obs_data_set_string(settings, "text", "        F12   Right\nEvent Overlay Pos'n")
-        obs.obs_source_update(source, settings)
-        obs.obs_data_release(settings)
-        obs.obs_source_release(source)
-    end   
+           obs.obs_source_set_enabled(source, false)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "Position1"))
+           end
+       end
+       obs.obs_source_release(source)  
+       local source = obs.obs_get_source_by_name("Position2") -- enable event icon Source
+       if source ~= nil then
+           obs.obs_source_set_enabled(source, true)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "Position2"))
+           end
+       end
+       obs.obs_source_release(source) 
 
     else  -- the initial position when script first run
        togglevar1 = true 
@@ -756,20 +767,28 @@ function toggle_event_position(pressed)  -- Hotkey to toggle Event overlay posit
                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "Event 2"))
            end
        end
-       obs.obs_source_release(source)
-       local source = obs.obs_get_source_by_name("Event_Position") -- Event type: Individual
+       obs.obs_source_release(source)  
+       local source = obs.obs_get_source_by_name("Position2") -- disable event icon Source
        if source ~= nil then
-        local settings = obs.obs_data_create()
-        obs.obs_data_set_string(settings, "text", "Left    F12        \nEvent Overlay Pos'n")
-        obs.obs_source_update(source, settings)
-        obs.obs_data_release(settings)
-        obs.obs_source_release(source)
-    end   
+           obs.obs_source_set_enabled(source, false)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "Position2"))
+           end
+       end
+       obs.obs_source_release(source)  
+       local source = obs.obs_get_source_by_name("Position1") -- enable event icon Source
+       if source ~= nil then
+           obs.obs_source_set_enabled(source, true)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "Position1"))
+           end
+       end
+       obs.obs_source_release(source)  
     end
 end -- toggle_event_position()
 
-function remove_overlays(pressed)  -- Hotkey to hide all the overlays, F2
-    -- HotKey to remove the two overlays
+
+function remove_overlays(pressed)  -- F2 Hotkey to hide the two overlays
     if not pressed then
      return
     end
@@ -823,7 +842,8 @@ function remove_overlays(pressed)  -- Hotkey to hide all the overlays, F2
     obs.obs_source_release(source)    
 end  -- remove_overlays()
 
-function disableUpdate_overlays(pressed)  --  Hotkey to disable overlays update (halt the script), F3
+
+function disableUpdate_overlays(pressed)  --  F3 Hotkey to disable overlays update (halt the script)
     if not pressed then
      return
     end
@@ -832,26 +852,59 @@ function disableUpdate_overlays(pressed)  --  Hotkey to disable overlays update 
         local source = obs.obs_get_source_by_name("Screen_Update") 
         if source ~= nil then
           local settings = obs.obs_data_create()
-          obs.obs_data_set_string(settings, "text", "        F3     \n   Overlays Updated   ")
+          obs.obs_data_set_string(settings, "text", "Overlays Updated")
           obs.obs_source_update(source, settings)
           obs.obs_data_release(settings)
           obs.obs_source_release(source)
-      end    
+        end  
+        local source = obs.obs_get_source_by_name("F3_Function_Background_False") -- disable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, false)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F3_Function_Background_False"))
+            end
+        end
+        obs.obs_source_release(source)  
+        local source = obs.obs_get_source_by_name("F3_Function_Background_True") -- enable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F3_Function_Background_True"))
+            end
+        end
+        obs.obs_source_release(source)   
     else
         disableUpdate = true
         local source = obs.obs_get_source_by_name("Screen_Update") 
         if source ~= nil then
           local settings = obs.obs_data_create()
-          obs.obs_data_set_string(settings, "text", "        F3     \n Overlays NOT Updated ")
+          obs.obs_data_set_string(settings, "text", "Overlays NOT Updated")
           obs.obs_source_update(source, settings)
           obs.obs_data_release(settings)
           obs.obs_source_release(source)
-      end   
+        end   
+        local source = obs.obs_get_source_by_name("F3_Function_Background_True") -- disable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, false)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F3_Function_Background_True"))
+            end
+        end
+        obs.obs_source_release(source)  
+        local source = obs.obs_get_source_by_name("F3_Function_Background_False") -- enable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F3_Function_Background_False"))
+            end
+        end
+        obs.obs_source_release(source)   
     end
     obs.script_log(obs.LOG_INFO, string.format("Disable Overlay Update: %s", disableUpdate))    
 end  -- disableUpdate_overlays()
 
-function display_overlays(pressed)  -- HotKey to show the two overlays; but not the Synchro Judge Labels, F1
+
+function display_overlays(pressed)  -- F1 HotKey to show the two overlays; but not the Synchro Judge Labels
     if not pressed then
      return
     end
@@ -890,38 +943,71 @@ function display_overlays(pressed)  -- HotKey to show the two overlays; but not 
     obs.obs_source_release(source)
 end  -- display_overlays()
 
-function toggle_event_type(pressed)  -- Hotkey to toggle Event type and re-start, F10
+
+function toggle_event_type(pressed)  -- F10 Hotkey to toggle Event type and re-start script
     -- Hotkey to toggle between the two event types
     if not pressed then
      return
     end
-    if togglevar2 then
-       togglevar2 = false
+    if synchro then
        synchro = false
        local source = obs.obs_get_source_by_name("Event_Type") -- Event type: Individual
        if source ~= nil then
            local settings = obs.obs_data_create()
-           obs.obs_data_set_string(settings, "text", "         F10     \nIndividual Event")
+           obs.obs_data_set_string(settings, "text", "Individual Event")
            obs.obs_source_update(source, settings)
            obs.obs_data_release(settings)
            obs.obs_source_release(source)
-       end       
+       end
+       local source = obs.obs_get_source_by_name("F10_Function_Background_False") -- disable background
+       if source ~= nil then
+           obs.obs_source_set_enabled(source, false)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F10_Function_Background_False"))
+           end
+       end
+       obs.obs_source_release(source)  
+       local source = obs.obs_get_source_by_name("F10_Function_Background_True") -- enable background
+       if source ~= nil then
+           obs.obs_source_set_enabled(source, true)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F10_Function_Background_True"))
+           end
+       end
+       obs.obs_source_release(source)          
     else 
-       togglevar2 = true
        synchro = true
        local source = obs.obs_get_source_by_name("Event_Type") -- Event type: Synchro
        if source ~= nil then
            local settings = obs.obs_data_create()
-           obs.obs_data_set_string(settings, "text", "         F10     \n  Synchro Event  ")
+           obs.obs_data_set_string(settings, "text", "Synchro Event")
            obs.obs_source_update(source, settings)
            obs.obs_data_release(settings)
            obs.obs_source_release(source)
-       end       
+       end   
+       local source = obs.obs_get_source_by_name("F10_Function_Background_True") -- disable background
+       if source ~= nil then
+           obs.obs_source_set_enabled(source, false)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F10_Function_Background_True"))
+           end
+       end
+       obs.obs_source_release(source)  
+       local source = obs.obs_get_source_by_name("F10_Function_Background_False") -- enable background
+       if source ~= nil then
+           obs.obs_source_set_enabled(source, true)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F10_Function_Background_False"))
+           end
+       end
+       obs.obs_source_release(source)       
     end
+    -- need to remove Event overlay here
     init()  -- re-start the script
 end -- toggle_event_type()
 
-function toggle_display_disable(pressed)  -- Hotkey to permanently remove overlays, F5
+
+function toggle_display_disable(pressed)  -- F5 Hotkey to permanently remove overlays
     if not pressed then
         return
        end
@@ -931,11 +1017,27 @@ function toggle_display_disable(pressed)  -- Hotkey to permanently remove overla
           local source = obs.obs_get_source_by_name("Remove_Overlays") 
           if source ~= nil then
             local settings = obs.obs_data_create()
-            obs.obs_data_set_string(settings, "text", "        F5     \n  Overlays Visable  ")
+            obs.obs_data_set_string(settings, "text", "Overlays Visable")
             obs.obs_source_update(source, settings)
             obs.obs_data_release(settings)
             obs.obs_source_release(source)
-        end   
+          end 
+          local source = obs.obs_get_source_by_name("F5_Function_Background_False") -- disable background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, false)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F5_Function_Background_False"))
+              end
+          end
+          obs.obs_source_release(source)  
+          local source = obs.obs_get_source_by_name("F5_Function_Background_True") -- enable background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, true)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F5_Function_Background_True"))
+              end
+          end
+          obs.obs_source_release(source)     
        else 
           togglevar3 = true
           remove_overlays(true)
@@ -943,69 +1045,147 @@ function toggle_display_disable(pressed)  -- Hotkey to permanently remove overla
           local source = obs.obs_get_source_by_name("Remove_Overlays") 
           if source ~= nil then
             local settings = obs.obs_data_create()
-            obs.obs_data_set_string(settings, "text", "        F5     \n Overlays NOT Visable ")
+            obs.obs_data_set_string(settings, "text", "Overlays NOT Visable")
             obs.obs_source_update(source, settings)
             obs.obs_data_release(settings)
             obs.obs_source_release(source)
-        end   
+          end  
+          local source = obs.obs_get_source_by_name("F5_Function_Background_True") -- disable background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, false)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F5_Function_Background_True"))
+              end
+          end
+          obs.obs_source_release(source)  
+          local source = obs.obs_get_source_by_name("F5_Function_Background_False") -- enable background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, true)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F5_Function_Background_False"))
+              end
+          end
+          obs.obs_source_release(source)    
        end
 end -- toggle_display_disable()  
 
-function toggle_disable_of_autohide(pressed)  -- Hotkey to toggle autohide disable, F8
+
+function toggle_disable_of_autohide(pressed)  -- F8 Hotkey to toggle autohide disable
     if not pressed then
         return
        end
-       if togglevar4 then
-          togglevar4 = false
+       if hideDisable then
           hideDisable = false
           local source = obs.obs_get_source_by_name("AutoHide") 
           if source ~= nil then
             local settings = obs.obs_data_create()
-            obs.obs_data_set_string(settings, "text", "        F8     \nAuto-hide Enabled ")
+            obs.obs_data_set_string(settings, "text", "Auto-hide Enabled")
             obs.obs_source_update(source, settings)
             obs.obs_data_release(settings)
             obs.obs_source_release(source)
-        end   
+          end   
+          local source = obs.obs_get_source_by_name("F8_Function_Background_False") -- disable background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, false)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F8_Function_Background_False"))
+              end
+          end
+          obs.obs_source_release(source)  
+          local source = obs.obs_get_source_by_name("F8_Function_Background_True") -- enable background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, true)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F8_Function_Background_True"))
+              end
+          end
+          obs.obs_source_release(source)   
        else 
-          togglevar4 = true
           hideDisable = true
           local source = obs.obs_get_source_by_name("AutoHide") 
           if source ~= nil then
             local settings = obs.obs_data_create()
-            obs.obs_data_set_string(settings, "text", "        F8     \nAuto-hide Disabled ")
+            obs.obs_data_set_string(settings, "text", "Auto-hide Disabled")
             obs.obs_source_update(source, settings)
             obs.obs_data_release(settings)
             obs.obs_source_release(source)
-        end   
+          end  
+          local source = obs.obs_get_source_by_name("F8_Function_Background_True") -- disable background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, false)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F8_Function_Background_True"))
+              end
+          end
+          obs.obs_source_release(source)  
+          local source = obs.obs_get_source_by_name("F8_Function_Background_False") -- enable background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, true)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F8_Function_Background_False"))
+              end
+          end
+          obs.obs_source_release(source)    
        end
 end -- toggle_disable_of_autohide()  
 
-function toggle_event_a_or_b(pressed)  -- Hotkey to toggle Event A or Event B and re-start, F9
+
+function toggle_event_a_or_b(pressed)  -- F9 Hotkey to toggle Event A or Event B and re-start
     if not pressed then
         return
     end
-    if togglevar5 then
-        togglevar5 = false
+    if eventB then
         eventB = false
         local source = obs.obs_get_source_by_name("A_B") -- Event type: Individual
         if source ~= nil then
             local settings = obs.obs_data_create()
-            obs.obs_data_set_string(settings, "text", "        F9     \n   Event A   ")
+            obs.obs_data_set_string(settings, "text", "Event A Shown")
             obs.obs_source_update(source, settings)
             obs.obs_data_release(settings)
             obs.obs_source_release(source)
-        end   
+        end 
+        local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- disable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, false)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F9_Function_Background_False"))
+            end
+        end
+        obs.obs_source_release(source)  
+        local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- enable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F9_Function_Background_True"))
+            end
+        end
+        obs.obs_source_release(source)     
     else 
-        togglevar5 = true
         eventB = true
         local source = obs.obs_get_source_by_name("A_B") -- Event type: Individual
         if source ~= nil then
             local settings = obs.obs_data_create()
-            obs.obs_data_set_string(settings, "text", "        F9     \n   Event B   ")
+            obs.obs_data_set_string(settings, "text", "Event B Shown")
             obs.obs_source_update(source, settings)
             obs.obs_data_release(settings)
             obs.obs_source_release(source)
         end   
+        local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- disable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, false)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F9_Function_Background_True"))
+            end
+        end
+        obs.obs_source_release(source)  
+        local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- enable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F9_Function_Background_False"))
+            end
+        end
+        obs.obs_source_release(source)   
     end
     init()  -- re-start the script
 end -- toggle_event_a_or_b()  
@@ -1109,16 +1289,7 @@ local function checkFile(id)
         obs.remove_current_callback()
         return
     end
-    -- script not reloaded so check for DUpdate and SUpdate files (and Event B versions)
-
-    --[[
-    obs.script_log(obs.LOG_INFO, string.format("Synchro selected: %s", synchro))
-    obs.script_log(obs.LOG_INFO, string.format("B Event selected: %s", eventB))
-    obs.script_log(obs.LOG_INFO, string.format("Event Complete: %s", eventComplete))
-    obs.script_log(obs.LOG_INFO, string.format("Disable Updates: %s", disableUpdate))
-    obs.script_log(obs.LOG_INFO, string.format("File Contents Changed: %s", fileContentsChanged))
-    obs.script_log(obs.LOG_INFO, string.format("TVBanner removed: %s", tvBanner_removed))
-    ]]
+    -- script not reloaded so check for Update files (DUpdate, SUpdate and Event B versions)
 
     --[[
    if eventComplete then
@@ -1127,7 +1298,7 @@ local function checkFile(id)
     end
     ]]    
 
-    if synchro then        
+--    if synchro then        
         local fs, err = io.open(textFileD, "rb") --try to open the Update text file, if it exists then its a synchro event, process the contents and update TV overlays
         if fs then
             fs:close()
@@ -1135,7 +1306,7 @@ local function checkFile(id)
             if disableUpdate then  -- if disable_Update Hotkey pressed then ignore file update
                 return
             end
-            obs.script_log(obs.LOG_INFO, string.format("\nSynchro Event 'SUpdate' File Detected"))
+            obs.script_log(obs.LOG_INFO, string.format("\nValid 'SUpdate' File Detected"))
             local f, err = io.open(textFile, "rb")  -- open the DR2Video text file
             if f then
                 line1 = f:read("*line") -- read the first line  Future version may remove line 1, (then need to change DR2Video options to remove headers as well)!
@@ -1168,49 +1339,6 @@ local function checkFile(id)
                 end
             end
         end 
-    else
-        local ft, err = io.open(textFileD, "rb") --try to open the Update text file, if it exists then its an individual event, process the contents and update TV overlays
-        if ft then
-            ft:close()
-            os.remove(textFileD) --  remove trigger file
-            if disableUpdate then  -- if disableUpdate Hotkey pressed then ignore file update
-                return
-            end        
-            obs.script_log(obs.LOG_INFO, string.format("\nIndividual Event 'DUpdate' File Detected"))         
-            local f, err = io.open(textFile, "rb")  -- open the DR2Video text file
-            if f then
-                line1 = f:read("*line") -- read the first line  Future version may remove line one, (then need to change DR2Video options to remove headers as well)!
-                line2 = f:read("*line") -- read the second line
-                if line2 then -- is there something in the file? Must be data to get to here, but check anyway!
-                    if debug then
-                        obs.script_log(obs.LOG_INFO, string.format(line2))
-                    end
-                    if current[line2] ~= line2 then  -- check for changed contents
-                        current[line2] = line2
-                        fileContentsChanged = true
-                        eventComplete = false
-                    else    
-                        fileContentsChanged = false
-                    end
-                    if debug then
-                        obs.script_log(obs.LOG_INFO, string.format("File contents changed? %s", fileContentsChanged))
-                        obs.script_log(obs.LOG_INFO, string.format("Synchro selected: %s", synchro))
-                        obs.script_log(obs.LOG_INFO, string.format("B Event selected: %s", eventB))
-                        obs.script_log(obs.LOG_INFO, string.format("Event Complete: %s", eventComplete))
-                        obs.script_log(obs.LOG_INFO, string.format("Disable Updates: %s", disableUpdate))
-                        obs.script_log(obs.LOG_INFO, string.format("TVBanner removed: %s", tvBanner_removed))
-                    end                    
-                    update(line1, line2) -- yes, process it using the "update(k,v)" function.  k=line1; v=line2
-                end
-                f:close()
-            else
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format("Error reading Individual text file: ", err))
-                end
-            end
-        end
-
-    end
 end -- checkFile(id)
 
 
@@ -1224,7 +1352,7 @@ function init()
     -- ensure nothing displayed on startup or function change
     tvBanner_remove()
 
-    -- select the text files to be displayed in the overlays and the update trigger file
+    -- select the text files to be displayed in the overlays and the associated update trigger file
     if synchro then      
             textFile = textFileS       -- Event A data file.  No B Event possible!
             textFileD = textFileDS     -- Event A trigger file.  No B Event possible!
@@ -1279,7 +1407,7 @@ key_4 = '  "htk_4": [ { "key": "OBS_KEY_F12" } ], '   -- HK to toggle_event_posi
 key_5 = '  "htk_5": [ { "key": "OBS_KEY_F10" } ], '   -- HK to toggle_event_type (synchro or individual)
 key_6 = '  "htk_6": [ { "key": "OBS_KEY_F5" } ], '   -- HK to permanently remove overlays
 key_7 = '  "htk_7": [ { "key": "OBS_KEY_F8" } ], '   -- HK to disable auto-hide of overlays
-key_8 = '  "htk_8": [ { "key": "OBS_KEY_F9" } ] }'   -- HK to toggle Event A or Event B   *** may not be needed as user can map the b file instead of the main ones ***
+key_8 = '  "htk_8": [ { "key": "OBS_KEY_F9" } ] }'   -- HK to toggle Event A or Event B
 json_s = key_1 .. key_2 .. key_3 .. key_4 .. key_5 .. key_6 .. key_7 .. key_8
 default_hotkeys =
     {
@@ -1295,26 +1423,6 @@ default_hotkeys =
 
 -- A function named "script_load" will be called on startup
 function script_load(settings) 
---[[	toggle_event_position = obs.obs_hotkey_register_frontend("toggle_event_position.trigger", "Toggle Event Overlay Position", toggle_event_position) -- Hotkey to toggle event overlay position
-    local toggle_hotkey_save_array = obs.obs_data_get_array(settings, "toggle_event_position.trigger")
-	obs.obs_hotkey_load(toggle_event_position_hotkey_id, toggle_hotkey_save_array)
-	obs.obs_data_array_release(toggle_hotkey_save_array)
- 
-	remove_overlays = obs.obs_hotkey_register_frontend("remove_overlays.trigger", "Remove DR2TVOverlays", remove_overlays)  -- Hotkey to temp remove overlays (next file update will re-display)
-	local remove_hotkey_save_array = obs.obs_data_get_array(settings, "remove_overlays.trigger")
-	obs.obs_hotkey_load(remove_overlays_hotkey_id, remove_hotkey_save_array)
-	obs.obs_data_array_release(remove_hotkey_save_array)
- 
-    display_overlays = obs.obs_hotkey_register_frontend("display_overlays.trigger", "Display DR2TVOverlays", display_overlays)  -- Hotkey to display all overlays
-	local display_hotkey_save_array = obs.obs_data_get_array(settings, "display_overlays.trigger")
-    obs.obs_hotkey_load(display_overlays_hotkey_id, display_hotkey_save_array)
-	obs.obs_data_array_release(display_hotkey_save_array)    
-
-    disableUpdate_overlays = obs.obs_hotkey_register_frontend("disableUpdate_overlays.trigger", "Disable Update of DR2TVOverlays", disableUpdate_overlays)  -- Hotkey to disable update of overlays
-	local disableUpdate_hotkey_save_array = obs.obs_data_get_array(settings, "disableUpdate_overlays.trigger")
-    obs.obs_hotkey_load(disableUpdate_overlays_hotkey_id, disableUpdate_hotkey_save_array)
-	obs.obs_data_array_release(disableUpdate_hotkey_save_array)   
-]]
     s = obs.obs_data_create_from_json(json_s)
     for _,v in pairs(default_hotkeys) do 
       a = obs.obs_data_get_array(s,v.id)
@@ -1323,7 +1431,6 @@ function script_load(settings)
       obs.obs_data_array_release(a)
     end
     obs.obs_data_release(s)
-
 end
 
 -- A function named "script_unload" will be called on removal of script
@@ -1340,10 +1447,6 @@ function script_update(settings)
     textFileDI_B = obs.obs_data_get_string(settings, "textFileDI_B") -- Dummy file to act as Individual B event new data trigger, usualy DUpdateB.txt
     dinterval = obs.obs_data_get_int(settings, "dinterval") -- Overlay display period
     debug = obs.obs_data_get_bool(settings, "debug") -- Set debug on or off
---    synchro = obs.obs_data_get_bool(settings, "synchro") -- Select for a Synchro event
---    hideDisable = obs.obs_data_get_bool(settings, "hideDisable") -- Turn off TVBanner2 overlay hide
---    tvMode = obs.obs_data_get_bool(settings, "tvMode") -- never hide the overlays, but allow toggle of Event overlay position
-
 
     obs.script_log(obs.LOG_INFO, string.format("\nOBS defaults updated, by Script_update()"))   
     obs.script_log(obs.LOG_INFO, string.format("Synchro selected: %s", synchro))
@@ -1358,7 +1461,7 @@ end
 -- A function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data</h></center>
-             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  DR2Video text file & path must be entered for main individual (Dive.txt) and for synchro event (Synchro.txt) or the B file if the other event required.  Trigger file locations (DUpdate.txt & SUpdate.txt) need to be entered to trigger an update of the DR data .txt files.  The approporate OBS Source .json file must be imported into OBS for this video overlay to function correctly.  </p><p>Andy - V2.1.0 2022Jun13</p>]]
+             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  DR2Video text file & path must be entered for main individual (Dive.txt) and for synchro event (Synchro.txt) or the B file if the other event required.  Trigger file locations (DUpdate.txt & SUpdate.txt) need to be entered to trigger an update of the DR data .txt files.  The approporate OBS Source .json file must be imported into OBS for this video overlay to function correctly.  </p><p>Andy - V2.1.0 2022Jun14</p>]]
 end
 
 -- A function named script_properties defines the properties that the user can change for the entire script module itself
@@ -1366,14 +1469,11 @@ function script_properties()
     local props = obs.obs_properties_create()
     obs.obs_properties_add_path(props, "textFileI", "Individual DR2Video File", obs.OBS_PATH_FILE, "", nil)
     obs.obs_properties_add_path(props, "textFileI_B", "Individual DR2Video File, B Event", obs.OBS_PATH_FILE, "", nil)
---    obs.obs_properties_add_bool(props, "synchro", "Select if Synchro Event")
     obs.obs_properties_add_path(props, "textFileS", "Synchro DR2Video File", obs.OBS_PATH_FILE, "", nil)
     obs.obs_properties_add_path(props, "textFileDI", "DR2Video Individual Update Trigger File", obs.OBS_PATH_FILE, "", nil)
     obs.obs_properties_add_path(props, "textFileDI_B", "DR2Video Individual B Event Update Trigger File", obs.OBS_PATH_FILE, "", nil)
     obs.obs_properties_add_path(props, "textFileDS_B", "DR2Video Synchro B Event Update Trigger File", obs.OBS_PATH_FILE, "", nil)
     obs.obs_properties_add_int(props,  "dinterval", "TVBanner display period (ms)", 4000, 15000, 2000)
---    obs.obs_properties_add_bool(props, "hideDisable", "Disable TVBanner2 Auto Hide")
---    obs.obs_properties_add_bool(props, "tvMode", "TV Mode, overlays always visable")
     obs.obs_properties_add_bool(props, "debug", "Show debug data in Log file")
 
     return props
@@ -1389,34 +1489,14 @@ function script_defaults(settings)
     obs.obs_data_set_default_string(settings, "textFileDI_B", "C:/Users/<your UserID>/Documents/OBS/mdt/temp/DUpdateB.txt")
     obs.obs_data_set_default_int(settings,  "dinterval", 5000)
     obs.obs_data_set_default_bool(settings, "debug", false)
---    obs.obs_data_set_default_bool(settings, "synchro", false) 
---    obs.obs_data_set_default_bool(settings, "hideDisable", true)
---    obs.obs_data_set_default_bool(settings, "tvMode", false)
 end
 
 -- A function named "script_save" will be called when the script is saved
 -- NOTE: This function is usually used for saving extra data (such as a hotkey's settings).  Settings set via the 'properties' function are saved automatically.
 function script_save(settings)
---[[  local toggle_hotkey_save_array = obs.obs_hotkey_save(toggle_event_position_hotkey_id)
-	obs.obs_data_set_array(settings, "pause_overlay.trigger", toggle_hotkey_save_array)
-	obs.obs_data_array_release(toggle_hotkey_save_array)
-
-  local remove_hotkey_save_array = obs.obs_hotkey_save(remove_overlays_hotkey_id)
-	obs.obs_data_set_array(settings, "remove_overlays.trigger", remove_hotkey_save_array)
-	obs.obs_data_array_release(remove_hotkey_save_array)
- 
-  local display_hotkey_save_array = obs.obs_hotkey_save(display_overlays_hotkey_id)
-	obs.obs_data_set_array(settings, "display_overlays.trigger", display_hotkey_save_array)
-	obs.obs_data_array_release(display_hotkey_save_array)    
-
-  local disableUpdate_hotkey_save_array = obs.obs_hotkey_save(disableUpdate_overlays_hotkey_id)
-	obs.obs_data_set_array(settings, "disableUpdate_overlays.trigger", disableUpdate_hotkey_save_array)
-	obs.obs_data_array_release(disableUpdate_hotkey_save_array)    
-]]
   for k, v in pairs(hk) do
     a = obs.obs_hotkey_save(hk[k])
     obs.obs_data_set_array(settings, k, a)
     obs.obs_data_array_release(a)
   end
-
 end
