@@ -24,13 +24,13 @@ the necessary JSON source file available in this repository.  It is unlikely tha
 be developed further.  
 
 Most user functions (V2.1.0 onwards) are now controlled by hotkeys as follows:
-    F1 = Temporary show overlays (until next file update)
-    F2 = Temporary remove overlays (until next file update)
+    F1 = Temporary remove overlays (until next file update)
+    F2 = Temporary show overlays (until next file update)
     F3 = Disable overlay updates
     F5 = Permanently remove all overlays
     F8 = Disable auto-hide of overlays
-    F9 = Toggle to display Event A or Event B
-    F10 = Toggle event type, Individual or Synchro
+    F9 = Toggle event type, Individual or Synchro
+    F10 = Toggle to display Event A or Event B
     F11 = OBS full screen mode (a predefined OBS hotkey)
     F12 = Toggle Event overlay position, top left or right
 
