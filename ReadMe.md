@@ -40,8 +40,8 @@ Most user functions (V2.1.0 onwards) can be controlled by hotkeys, as follows:
 - Download and install Exeldro's 'Source Dock', 'Gradient Source' and optionally from Palakis 'obs-websocket'.
 
 - Download zip file from (https://github.com//andy5211d/DR2TVOverlay), unpack/unzip.
-- Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button
-- Import 'divingoverlays-obssource.json' to OBS Studio via Profile>Import and select the .json file
+    Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button
+    Import 'divingoverlays-obssource.json' to OBS Studio via Profile>Import and select the .json file
 
 On first install the user must map the necessary DR2Video files in OBS as can be seen in the following two screenshots.
 
@@ -63,12 +63,12 @@ the scoreboard enabled before OBS-Studio will function correctly (as well of cou
 not important the exact load sequence but I tend to run DR2Video before OBS-Studio.
 
 The default start-up of the script has the following settings:
-    - Individual Event (F9)
-    - Event A (F10)
-    - Event Overlay top left (F12)
-    - Auto-hide of overlay enabled (F8)
-    - Overlay Update enabled (F3)
-    - Overlays Visible (F5)
+- Individual Event (F9)
+- Event A (F10)
+- Event Overlay top left (F12)
+- Auto-hide of overlay enabled (F8)
+- Overlay Update enabled (F3)
+- Overlays Visible (F5)
 
     if the initialisation has gone correctly then the Hotkey status dock will look something like this:
 ![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/hotkeystatusdock.gif)
