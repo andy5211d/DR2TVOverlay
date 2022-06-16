@@ -18,8 +18,8 @@ set-up information is retained by OBS for future runs and does not need to be re
 
 Diverecorders DR2Video software has a number of user configurable fields where the relevant computer files will be located. 
 These file locations need to be entered into the DR2TVOverlay script fields.  An example file location is shown by the script
-but this will not work without modification by the user for their specific computer user-id (you can edit the Lua script if
-you wish).
+but this will not work without modification by the user for their specific computer user-id (you can edit the Lua script with
+you User-ID if you wish).
 
 There are two different overlay layouts provided by the two script major versions, however at present only script V2.n.n has
 the necessary JSON source file available in this repository.  It is unlikely that the V1.n.n script and associated layout 
@@ -40,38 +40,45 @@ Most user functions (V2.1.0 onwards) can be controlled by hotkeys, as follows:
 - Download and install Exeldro's 'Source Dock', 'Gradient Source' and optionally from Palakis 'obs-websocket'.
 
 - Download zip file from (https://github.com//andy5211d/DR2TVOverlay), unpack/unzip.
-- Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools > Scripts > "+" button
-- Import 'divingoverlays-obssource.json' to OBS Studio via Profile > Import and select the .json file
-
-# Usage
-These instructions assume that the user is familiar with Diverecorder and OBS-Studio.  Both programs have lots of on-line
-resources on set-up and operation which will not be repeated here.  Diverecorder's DR2Video needs to be loaded and the
-scoreboard enabled before OBS-Studio will function correctly (as well of course Diverecorder running an event!).  It is
-not important the exact load sequence but I tend to run DR2Video before OBS-Studio.
+- Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button
+- Import 'divingoverlays-obssource.json' to OBS Studio via Profile>Import and select the .json file
 
 On first install the user must map the necessary DR2Video files in OBS as can be seen in the following screenshots.
 The file location mapping in DR2Video:
 ![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/DR2Videofilelocations.gif)
 
-The file location mapping in OBS-Studio:
+The file location mapping in OBS-Studio DR2TVOverlay script:
 ![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/OBSscriptfilelocations.gif)
 
-The above are two examples, you can use any mapping that make sense to Windows!
+The above are two file mapping examples, you can use any mapping that make sense to Windows but ensure that they are
+consistant!  Errors in file mapping are the usual cause of the script not working.  It will be necessary to run an
+event or two in Diverecorder to generate the files in DR2Video. One event will need to be Event B to produce the 
+required files.  This should only need to be done once, on initial installation of the script. 
 
-- The default start-up of the script is with the following settings:
-    ~ Individual Event (F9)
-    ~ Event A (F10)
-    ~ Event Overlay Top Left (F12)
-    ~ Auto-hide of overlay enabled (F8)
-    ~ Overlay Update Enabled (F3)
-    ~ Overlays Visible (F5)
+# Usage
+These operating instructions assume that the user is familiar with Diverecorder and OBS-Studio.  Both programs have lots of
+on-line resources on set-up and operation which will not be repeated here.  Diverecorder's DR2Video needs to be loaded and
+the scoreboard enabled before OBS-Studio will function correctly (as well of course Diverecorder running an event!).  It is
+not important the exact load sequence but I tend to run DR2Video before OBS-Studio.
+
+- The default start-up of the script uses the following settings:
+    Individual Event (F9)
+    Event A (F10)
+    Event Overlay top left (F12)
+    Auto-hide of overlay enabled (F8)
+    Overlay Update enabled (F3)
+    Overlays Visible (F5)
 
     if the initialisation has gone correctly then the Hotkey status dock will look something like this:
 ![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/hotkeystatusdock.gif)
 
 It is likely on initial start-up that there will be the Event overlay showing with data from the last event.  This overlay
-can be cleared using either Hotkey F1 or F5 dependent upon user preference.  
+can be removed using either Hotkey F1 or F5 dependent upon user preference.  
 
-This overlay script will generally follow what the Recorders are doing in Diverecorder.  One running there should be little
-to do but note, DR2TVOverlay does not have anyway of showing the reason for deductions, for whatever reason, thus 
-interventation in the overlay may be desirable at times (use F3 F5 as necessary).
+The overlay script will generally follow what the event Recorders are doing in Diverecorder.  One running there should be
+little to do but note, DR2TVOverlay does not have anyway of showing the reason for deductions, thus interventation in the
+overlay may be desirable at times (use F3 F5 as necessary).
+
+If 'obs-websocket' has been installed then it is possable to remotely control OBS using an iPhone or other portable device, 
+the functions available remotely depent upon the app loaded on the portable device.  I'm still experementing with this 
+capability!  
