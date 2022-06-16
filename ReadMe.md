@@ -40,7 +40,9 @@ Most user functions (V2.1.0 onwards) can be controlled by hotkeys, as follows:
 - Download and install Exeldro's 'Source Dock', 'Gradient Source' and optionally from Palakis 'obs-websocket'.
 
 - Download zip file from (https://github.com//andy5211d/DR2TVOverlay), unpack/unzip.
-    Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button
+
+    Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button. 
+    
     Import 'divingoverlays-obssource.json' to OBS Studio via Profile>Import and select the .json file
 
 On first install the user must map the necessary DR2Video files in OBS as can be seen in the following two screenshots.
