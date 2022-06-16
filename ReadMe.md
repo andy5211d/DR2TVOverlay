@@ -26,14 +26,23 @@ the necessary JSON source file available in this repository.  It is unlikely tha
 will be developed further.  
 
 Most user functions (V2.1.0 onwards) can be controlled by hotkeys, as follows:
+
     F1 = Temporary remove overlays (until next DR2Video file update)
+
     F2 = Temporary show overlays (until next DR2Video file update)
+
     F3 = Disable overlay updates (freeze the display)
+
     F5 = Permanently remove all overlays
+
     F8 = Disable auto-hide of overlays
+
     F9 = Toggle event type, Individual or Synchro
+
     F10 = Toggle to display Event A or Event B
+
     F11 = OBS full screen mode (a predefined OBS hotkey)
+    
     F12 = Toggle Event overlay position, top left or top right
 
 # Installation 
@@ -42,7 +51,7 @@ Most user functions (V2.1.0 onwards) can be controlled by hotkeys, as follows:
 - Download zip file from (https://github.com//andy5211d/DR2TVOverlay), unpack/unzip.
 
     Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button. 
-    
+
     Import 'divingoverlays-obssource.json' to OBS Studio via Profile>Import and select the .json file
 
 On first install the user must map the necessary DR2Video files in OBS as can be seen in the following two screenshots.
