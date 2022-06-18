@@ -51,15 +51,18 @@ following steps on anything other then a Windows 7, 10 and 11 PC.  It MAY work o
 
 - Download and install two monotype fonts.   The script uses absolute placement for individual data items and if a
 proportional font is used the data may extend out of the 'Overlay' bounds or more likely not line-up with other data.  The 
-two fonts used are 'DejaVu Sans Mono Book' and 'Monofonto Regular'.  Others fonts may work.
+two fonts used are 'DejaVu Sans Mono Book' and 'Monofonto Regular'.  Other monotype fonts may work.
 
-- Download and install Exeldro's 'Source Dock', 'Gradient Source' and optionally from Palakis 'obs-websocket'.
+- Download and install Exeldro's 'Source Dock', 'Gradient Source' and optionally from Palakis 'obs-websocket' add-ins to
+OBS-Studio.
 
 - Download zip file from (https://github.com//andy5211d/DR2TVOverlay), unpack/unzip.
 
-    Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button. 
+    Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button 
 
-    Import 'divingoverlays-obssource.json' to OBS Studio via Profile>Import and select the .json file
+    Import 'basic.ini' to OBS-Studio via Profile>Import and select the required .ini file
+
+    Import 'divingoverlays-obssourceV2.json' to OBS Studio via Scene Collection>Import and select the required .json file
 
 - Download and install the 'flags' files in the appropriate folder.  Not all the FINA country flags are in the repository
 and thus the user may have to download flag files specific to their event.  I use the club logos for local events in Great
@@ -96,10 +99,10 @@ The default start-up of the script has the following settings:
 - Overlay Update enabled (F3)
 - Overlays Visible (F5)
 
-    if the initialisation has gone correctly then the Hotkey status dock will look something like this:
+If the initialisation has gone correctly then the Hotkey status dock will look something like this:
 ![gif](/gifs/hotkeystatusdock.gif)
 
-The user should now use the hotkeys to change the mode of operation as desired.  In most cases F9 and F10 are only needed
+The user should use the Hotkeys to change the mode of operation as desired.  In most cases F9 and F10 are only needed
 to set-up an event with F1, F2, F3 and F5 used during the event to disable or remove the overlay temporary or permanently
 if the event is not going to plan!  
 
@@ -114,22 +117,24 @@ If 'obs-websocket' has been installed in OBS-Studio then it is possible to remot
 portable device, the functions available remotely dependent upon the app loaded on the portable device.  I'm still 
 experimenting with this capability!  
 
-The TV Overlay has two overlay banners, a smallish Event banner at the top, either top left or top right dependent upon
-the use of Hotkey F12.  The Hotkey status Dock shows the current position of the event banner in the F12 icon.  And a 
-larger dive information banner across the bottom which will show the divers name and dive description and then after
-the judges have entered their awards into DR the divers name and the individual awards, ranking and totals.
+## Screenshots
+
+The DR2TVOverlay script generates two overlay banners, a smallish Event banner at the top, either top left or top right
+dependent upon the use of Hotkey F12.  The Hotkey status Dock shows the current position of the event banner in the F12
+icon.  And a larger dive information banner across the bottom which will show the divers name and dive description and 
+then after the judges have entered their awards into DR the divers name and the individual awards, ranking and totals.
 
 For an Individual event the video with a dive description overlay will look something like this:
 ![gif](/gifs/IndividualDescription.gif)
 
-The large bottom overlay will then disappear after 5 sec and reappear when the judges awards are displayed on the main 
-scoreboard, something like this:
+The large bottom overlay will then disappear after 5 sec (see script settings) and reappear when the judges awards are
+displayed on the main scoreboard, something like this:
 ![gif](/gifs/IndividualAwards.gif)
 
 For a Synchro event the video with dive description overlay will look similar to this:
 ![gif](/gifs/SynchroDescription.gif)
 
-and when the awards are shown, something like this:
+and when the awards are shown:
 ![gif](/gifs/SynchroAwards.gif)
 
 The script will automatically cater for a differing number of judges with a minimum of 5 for individual events, for
@@ -138,6 +143,6 @@ Synchro events only 9 and 11 judges are supported.
 # To Do
 Improve the above instructions!   
 
-Generate 'deductions' Hotkeys with associated descriptive text.  In this version of DR2TVOverlay the display of
-the reason for the deduction cannot be automated.  The necessary data is not available in DR2Video to automatically
-trigger a deductions overlay/description.
+Generate 'deductions' Hotkeys with associated descriptive text.  In this version of DR2TVOverlay the display of the reason
+for the deduction cannot be automated.  The necessary data is not available in DR2Video to automatically trigger a 
+deductions overlay/description.
