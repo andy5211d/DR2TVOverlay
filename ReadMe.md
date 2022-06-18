@@ -72,6 +72,7 @@ On first install the user must map the necessary DR2Video files in OBS as can be
 The file location mapping in DR2Video:
 ![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/DR2Videofilelocations.gif)
 
+
 The file location mapping in OBS-Studio DR2TVOverlay script:
 ![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/OBSscriptfilelocations.gif)
 
@@ -121,12 +122,15 @@ the judges have entered their awards into DR the divers name and the individual 
 For an Individual event the video with a dive description overlay will look something like this:
 ![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/IndividualDescription.gif)
 
+
 The large bottom overlay will then disappear after 5 sec and reappear when the judges awards are displayed on the main 
 scoreboard, something like this:
 ![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/IndividualAwards.gif)
 
+
 For a Synchro event the video with dive description overlay will look similar to this:
 ![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/SynchroDescription.gif)
+
 
 and when the awards are shown, something like this:
 ![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/SynchroAwards.gif)
