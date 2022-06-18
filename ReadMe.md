@@ -70,11 +70,11 @@ default flag file to one relevant to their event.  The default flag is set to th
 On first install the user must map the necessary DR2Video files in OBS as can be seen in the following two screenshots.
 
 The file location mapping in DR2Video:
-![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/DR2Videofilelocations.gif)
+![gif](https://github.com/andy5211d/DR2TVOverlay/tree/main/gifs/DR2Videofilelocations.gif)
 
 
 The file location mapping in OBS-Studio DR2TVOverlay script:
-![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/OBSscriptfilelocations.gif)
+![gif](https://github.com/andy5211d/DR2TVOverlay/tree/main/gifs/OBSscriptfilelocations.gif)
 
 The above are two file mapping examples, you can use any mapping that make sense to Windows and your configuration, but
 ensure that they are consistent!  Errors in file mapping are the usual cause of the script not working.  It will be
@@ -97,7 +97,7 @@ The default start-up of the script has the following settings:
 - Overlays Visible (F5)
 
     if the initialisation has gone correctly then the Hotkey status dock will look something like this:
-![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/hotkeystatusdock.gif)
+![gif](https://github.com/andy5211d/DR2TVOverlay/tree/main/gifs/hotkeystatusdock.gif)
 
 The user should now use the hotkeys to change the mode of operation as desired.  In most cases F9 and F10 are only needed
 to set-up an event with F1, F2, F3 and F5 used during the event to disable or remove the overlay temporary or permanently
@@ -120,20 +120,20 @@ larger dive information banner across the bottom which will show the divers name
 the judges have entered their awards into DR the divers name and the individual awards, ranking and totals.
 
 For an Individual event the video with a dive description overlay will look something like this:
-![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/IndividualDescription.gif)
+![gif](https://github.com/andy5211d/DR2TVOverlay/tree/main/gifs/IndividualDescription.gif)
 
 
 The large bottom overlay will then disappear after 5 sec and reappear when the judges awards are displayed on the main 
 scoreboard, something like this:
-![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/IndividualAwards.gif)
+![gif](https://github.com/andy5211d/DR2TVOverlay/tree/main/gifs/IndividualAwards.gif)
 
 
 For a Synchro event the video with dive description overlay will look similar to this:
-![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/SynchroDescription.gif)
+![gif](https://github.com/andy5211d/DR2TVOverlay/tree/main/gifs/SynchroDescription.gif)
 
 
 and when the awards are shown, something like this:
-![gif](https://github.com/andy5211d/DR2TVOverlay/blob/main/gifs/SynchroAwards.gif)
+![gif](https://github.com/andy5211d/DR2TVOverlay/tree/main/gifs/SynchroAwards.gif)
 
 The script will automatically cater for a differing number of judges with a minimum of 5 for individual events, for
 Synchro events only 9 and 11 judges are supported.  
