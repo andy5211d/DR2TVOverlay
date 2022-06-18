@@ -70,11 +70,11 @@ default flag file to one relevant to their event.  The default flag is set to th
 On first install the user must map the necessary DR2Video files in OBS as can be seen in the following two screenshots.
 
 The file location mapping in DR2Video:
-![gif](/gifs/DR2Videofilelocations.gif)
+![svg](/gifs/DR2Videofilelocations.svg)
 
 
 The file location mapping in OBS-Studio DR2TVOverlay script:
-![gif](/gifs/OBSscriptfilelocations.gif)
+![svg](/gifs/OBSscriptfilelocations.svg)
 
 The above are two file mapping examples, you can use any mapping that make sense to Windows and your configuration, but
 ensure that they are consistent!  Errors in file mapping are the usual cause of the script not working.  It will be
@@ -97,7 +97,7 @@ The default start-up of the script has the following settings:
 - Overlays Visible (F5)
 
     if the initialisation has gone correctly then the Hotkey status dock will look something like this:
-![gif](/gifs/hotkeystatusdock.gif)
+![svg](/gifs/hotkeystatusdock.svg)
 
 The user should now use the hotkeys to change the mode of operation as desired.  In most cases F9 and F10 are only needed
 to set-up an event with F1, F2, F3 and F5 used during the event to disable or remove the overlay temporary or permanently
@@ -120,20 +120,17 @@ larger dive information banner across the bottom which will show the divers name
 the judges have entered their awards into DR the divers name and the individual awards, ranking and totals.
 
 For an Individual event the video with a dive description overlay will look something like this:
-![gif](/gifs/IndividualDescription.gif)
-
+![svg](/gifs/IndividualDescription.svg)
 
 The large bottom overlay will then disappear after 5 sec and reappear when the judges awards are displayed on the main 
 scoreboard, something like this:
-![gif](/gifs/IndividualAwards.gif)
-
+![svg](/gifs/IndividualAwards.svg)
 
 For a Synchro event the video with dive description overlay will look similar to this:
-![gif](/gifs/SynchroDescription.gif)
-
+![svg](/gifs/SynchroDescription.svg)
 
 and when the awards are shown, something like this:
-![gif](/gifs/SynchroAwards.gif)
+![svg](/gifs/SynchroAwards.svg)
 
 The script will automatically cater for a differing number of judges with a minimum of 5 for individual events, for
 Synchro events only 9 and 11 judges are supported.  
