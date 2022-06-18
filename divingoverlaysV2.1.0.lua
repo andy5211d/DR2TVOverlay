@@ -16,7 +16,7 @@
 **    V2.0.1  2022-04-28  Country and club flags added.  HotKeys added but don't do anything yet!
 **    V2.0.2  2022-05-08  Event overlay can switch between two positions by Hotkey toggle action.  Needs new JSON source import to work.
 **    V2.0.3  2022-05-30  Added permanent display option of overlays for TV company's overlay management (not yet working, use V2.0.2b).  Updated to prevent error when update file has no flag file name.
-**    V2.1.0  2022-06-14  Hotkey assignments now implemented by code and shown in a realtime status dock.  Lots of minor improvements.  Auto-hide of Event overlay removed, now use Hotkeys to
+**    V2.1.0  2022-06-18  Hotkey assignments now implemented by code and shown in a realtime status dock.  Lots of minor improvements.  Auto-hide of Event overlay removed, now use Hotkeys to
 **            remove all overlays at the end of an event.
 **
 **  *** Things of note ***
@@ -968,7 +968,7 @@ function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-st
            obs.obs_data_release(settings)
            obs.obs_source_release(source)
        end
-       local source = obs.obs_get_source_by_name("F10_Function_Background_False") -- disable background
+       local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- disable background
        if source ~= nil then
            obs.obs_source_set_enabled(source, false)
            if debug then
@@ -976,7 +976,7 @@ function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-st
            end
        end
        obs.obs_source_release(source)  
-       local source = obs.obs_get_source_by_name("F10_Function_Background_True") -- enable background
+       local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- enable background
        if source ~= nil then
            obs.obs_source_set_enabled(source, true)
            if debug then
@@ -986,6 +986,7 @@ function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-st
        obs.obs_source_release(source)          
     else 
        synchro = true
+       toggle_event_a_or_b(true)  -- Event B for Synchro not possible
        local source = obs.obs_get_source_by_name("Event_Type") -- Event type: Synchro
        if source ~= nil then
            local settings = obs.obs_data_create()
@@ -994,7 +995,7 @@ function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-st
            obs.obs_data_release(settings)
            obs.obs_source_release(source)
        end   
-       local source = obs.obs_get_source_by_name("F10_Function_Background_True") -- disable background
+       local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- disable background
        if source ~= nil then
            obs.obs_source_set_enabled(source, false)
            if debug then
@@ -1002,7 +1003,7 @@ function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-st
            end
        end
        obs.obs_source_release(source)  
-       local source = obs.obs_get_source_by_name("F10_Function_Background_False") -- enable background
+       local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- enable background
        if source ~= nil then
            obs.obs_source_set_enabled(source, true)
            if debug then
@@ -1011,7 +1012,6 @@ function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-st
        end
        obs.obs_source_release(source)       
     end
-    -- need to remove Event overlay here
     init()  -- re-start the script
 end -- toggle_event_type()
 
@@ -1153,7 +1153,7 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
             obs.obs_data_release(settings)
             obs.obs_source_release(source)
         end 
-        local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- disable background
+        local source = obs.obs_get_source_by_name("F10_Function_Background_False") -- disable background
         if source ~= nil then
             obs.obs_source_set_enabled(source, false)
             if debug then
@@ -1161,7 +1161,7 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
             end
         end
         obs.obs_source_release(source)  
-        local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- enable background
+        local source = obs.obs_get_source_by_name("F10_Function_Background_True") -- enable background
         if source ~= nil then
             obs.obs_source_set_enabled(source, true)
             if debug then
@@ -1171,6 +1171,9 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
         obs.obs_source_release(source)     
     else 
         eventB = true
+        if synchro then               
+            return   -- Event B for Synchro not possible
+        end
         local source = obs.obs_get_source_by_name("A_B") -- Event type: Individual
         if source ~= nil then
             local settings = obs.obs_data_create()
@@ -1179,7 +1182,7 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
             obs.obs_data_release(settings)
             obs.obs_source_release(source)
         end   
-        local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- disable background
+        local source = obs.obs_get_source_by_name("F10_Function_Background_True") -- disable background
         if source ~= nil then
             obs.obs_source_set_enabled(source, false)
             if debug then
@@ -1187,7 +1190,7 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
             end
         end
         obs.obs_source_release(source)  
-        local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- enable background
+        local source = obs.obs_get_source_by_name("F10_Function_Background_False") -- enable background
         if source ~= nil then
             obs.obs_source_set_enabled(source, true)
             if debug then
@@ -1474,7 +1477,7 @@ end
 -- A function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data</h></center>
-             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  DR2Video text file & path must be entered for main individual (Dive.txt) and for synchro event (Synchro.txt) or the B file if the other event required.  Trigger file locations (DUpdate.txt & SUpdate.txt) need to be entered to trigger an update of the DR data .txt files.  The approporate OBS Source .json file must be imported into OBS for this video overlay to function correctly.  </p><p>Andy - V2.1.0 2022Jun14</p>]]
+             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  DR2Video text file & path must be entered for main individual (Dive.txt) and for synchro event (Synchro.txt) or the B file if the other event required.  Trigger file locations (DUpdate.txt & SUpdate.txt) need to be entered to trigger an update of the DR data .txt files.  The approporate OBS Source .json file must be imported into OBS for this video overlay to function correctly.  </p><p>Andy - V2.1.0 2022Jun18</p>]]
 end
 
 -- A function named script_properties defines the properties that the user can change for the entire script module itself
@@ -1488,7 +1491,6 @@ function script_properties()
     obs.obs_properties_add_path(props, "textFileDS_B", "DR2Video Synchro B Event Update Trigger File", obs.OBS_PATH_FILE, "", nil)
     obs.obs_properties_add_int(props,  "dinterval", "TVBanner display period (ms)", 4000, 15000, 2000)
     obs.obs_properties_add_bool(props, "debug", "Show debug data in Log file")
-
     return props
 end
 
