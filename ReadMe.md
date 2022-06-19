@@ -1,8 +1,8 @@
 # Description
-DR2TVOverlay is an Extension for OBS Studio built on top of its scripting facilities utilising built-in embedded LuaJIT
-interpreter. This Lua script uses a number of OBS-Studio Sources to display the event information from DiveRecorder (DR) onto
-the live event video stream (https://www.diverecorder.co.uk).  To use this script the user will need to be reasonably familiar
-with Diverecorder and OBS-Studio.  Use the latest version, others kept for my reference during ongoing development.
+DR2TVOverlay is an extension for [OBS Studio](https://obsproject.com/) built on top of its scripting facilities utilising the built-in embedded LuaJIT
+interpreter. This Lua script uses a number of OBS-Studio Sources to display the event information from [DiveRecorder](https://www.diverecorder.co.uk) (DR) onto
+the live event video stream.  To use this script the user will need to be reasonably familiar with Diverecorder and OBS-Studio.
+Use the latest version, others kept for my reference during ongoing development.
 
 The script uses the data provided by DR's DR2Video software and its associated text files.  Once running the script
 automatically checks the DR2Video files and if a change is detected displays the new information.  The user has the 
@@ -47,13 +47,15 @@ Most user functions (V2.1.0 onwards) can be controlled by hotkeys, as follows:
 
 # Installation 
 These installation notes are for a Windows PC only.  I do not know how a Linux or Mac works and have not tried any of the
-following steps on anything other then a Windows 7, 10 and 11 PC.  It MAY work on other OS as I know OBS-Studio does.
+following steps on anything other then a Windows 7, 10 and 11 PC.  It MAY work on other OS's as I know OBS-Studio does.
+However DR2Video will only run under Windows and thus the file mapping would have to use a networked drive into the OBS 
+machine.  
 
 - Download and install two monotype fonts.   The script uses absolute placement for individual data items and if a
 proportional font is used the data may extend out of the 'Overlay' bounds or more likely not line-up with other data.  The 
 two fonts used are 'DejaVu Sans Mono Book' and 'Monofonto Regular'.  Other monotype fonts may work.
 
-- Download and install Exeldro's 'Source Dock', 'Gradient Source' and optionally from Palakis 'obs-websocket' add-ins to
+- Download and install Exeldro's [Source Dock](https://obsproject.com/forum/resources/source-dock.1317/), [Gradient Source](https://obsproject.com/forum/resources/gradient-source.1172/) and optionally from Palakis [obs-websocket](https://obsproject.com/forum/resources/obs-websocket-remote-control-obs-studio-from-websockets.466/) add-ins to
 OBS-Studio.
 
 - Download zip file from (https://github.com//andy5211d/DR2TVOverlay), unpack/unzip.
