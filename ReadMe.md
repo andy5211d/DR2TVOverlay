@@ -2,7 +2,7 @@
 DR2TVOverlay is an extension for [OBS Studio](https://obsproject.com/) built on top of its scripting facilities utilising the built-in embedded LuaJIT
 interpreter. This Lua script uses a number of OBS-Studio Sources to display the event information from [DiveRecorder](https://www.diverecorder.co.uk) (DR) onto
 the live event video stream.  To use this script the user will need to be reasonably familiar with Diverecorder and OBS-Studio.
-Use the latest version, others kept for my reference during ongoing development.
+Use the latest version, other scripts are kept on-line for my reference during ongoing development.
 
 The script uses the data provided by DR's DR2Video software and its associated text files.  Once running the script
 automatically checks the DR2Video files and if a change is detected displays the new information.  The user has the 
@@ -60,7 +60,8 @@ OBS-Studio.
 
 - Download zip file from (https://github.com//andy5211d/DR2TVOverlay), unpack/unzip.
 
-    Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button 
+    Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button (script needs to be placed in 
+    the C:\Program Files\obs-studio\data\obs-plugins\frontend-tools\scripts folder)
 
     Import 'basic.ini' to OBS-Studio via Profile>Import and select the required .ini file
 
@@ -68,7 +69,7 @@ OBS-Studio.
 
 - Download and install the 'flags' files in the appropriate folder.  Not all the FINA country flags are in the repository
 and thus the user may have to download flag files specific to their event.  I use the club logos for local events in Great
-Britain.  There are numerous flag file sites on the internet.  OBS seems to work with both .gif and .jpg format files,
+Britain.  There are numerous flag file sites on the internet and  OBS seems to work with both .gif and .jpg format files,
 however the correct file type must be entered into DR2Video file area (see below).  The user will need to change the
 default flag file to one relevant to their event.  The default flag is set to the 'British Diving' logo.
 
@@ -84,7 +85,8 @@ The file location mapping in OBS-Studio DR2TVOverlay script:
 The above are two file mapping examples, you can use any mapping that make sense to Windows and your configuration, but
 ensure that they are consistent!  Errors in file mapping are the usual cause of the script not working.  It will be
 necessary to run an event or two in Diverecorder to generate the files in DR2Video so as to be able to map them. One event
-will need to be Event B to produce the required files.  This file mapping should only need to be done once, on initial 
+will need to be Event B to produce the required files.  You can just generate empty files with Notepad++ as long as they
+have the required extension and are in the mapped folder.  This file mapping should only need to be done once, on initial 
 installation of the script. 
 
 # Usage
@@ -144,6 +146,9 @@ Synchro events only 9 and 11 judges are supported.
 
 # To Do
 Improve the above instructions!   
+
+Configure a useful remote control capability for OBS-Studio.  Several apps are available such as UPDeck, OBS Blade and
+Touch Portal, all for iPhone and I guess for other portable devices.  Not used either for an event, yet!
 
 Generate 'deductions' Hotkeys with associated descriptive text.  In this version of DR2TVOverlay the display of the reason
 for the deduction cannot be automated.  The necessary data is not available in DR2Video to automatically trigger a 
