@@ -1,4 +1,11 @@
 --[[
+**       __      ______  _____    ______ _    __  ____   _    __   ______   ______   ___    _______ _    __
+**      /  |   / ___  / /__   \ /_  __/ | |  / / / __ \ | |  / / / _____/ /  __  /  / /    /  __  /| |  / /
+**     / / |  / /__/ /   /  _/   / /    | | / / / / | | | | / / / /__    / /__/ / / /     / /__/ / | |_/ /
+**    / /| | /  __  |  /  /__   / /     | |/ / | |_/ /  | |/ / / /___   /  __  | / /___  /  __  /  |_  _/
+**   /____/ /_/   |_| |_____/  /_/      |__/   |____/   |__/  /______| /_/   |_|/_____/ /_/  /_/    /_/   TM
+**
+**
 **  Open Broadcaster Software
 **
 **  OBS > Tools > Scripts
@@ -1414,7 +1421,7 @@ end -- init()
 ------------------------------------------------------------------------------------
 --    ***        OBS Set-up functions for user configurable items          ***    --
 ------------------------------------------------------------------------------------
--- Hotkey definitions and default settings
+-- Hotkey definitions and default settings (not realy OBS Set-up functions)
 hk = {}
 key_1 = '{ "htk_1": [ { "key": "OBS_KEY_F1" } ], '   -- HK to temp remove_overlays
 key_2 = '  "htk_2": [ { "key": "OBS_KEY_F2" } ], '   -- HK to temp display_overlays (all)
