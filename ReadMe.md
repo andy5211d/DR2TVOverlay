@@ -2,7 +2,7 @@
 DR2TVOverlay is an extension for [OBS Studio](https://obsproject.com/) built on top of its scripting facilities utilising the built-in embedded LuaJIT
 interpreter. This Lua script uses a number of OBS-Studio Sources to display the event information from [DiveRecorder](https://www.diverecorder.co.uk) (DR) onto
 the live event video stream.  To use this script the user will need to be reasonably familiar with Diverecorder and OBS-Studio.
-Use the latest version, other scripts are kept on-line for my reference during ongoing development.
+Use the latest version of this script, other scripts are kept on-line for my reference during ongoing development.
 
 The script uses the data provided by DR's DR2Video software and its associated text files.  Once running the script
 automatically checks the DR2Video files and if a change is detected displays the new information.  The user has the 
