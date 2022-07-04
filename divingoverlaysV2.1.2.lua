@@ -25,7 +25,8 @@
 **    V2.0.3  2022-05-30  Added permanent display option of overlays for TV company's overlay management (not yet working, use V2.0.2b).  Updated to prevent error when update file has no flag file name.
 **    V2.1.0  2022-06-18  Hotkey assignments now implemented by code and shown in a realtime status dock.  Lots of minor improvements.  Auto-hide of Event overlay removed, now use Hotkeys to
 **            remove all overlays at the end of an event.
-**    V2.1.1  2022-07-04 Code added for UDP receive experiment.  Does not impact the main workings, yet!  Can't enable UDP on this software and have DR2Video running!
+**    V2.1.1  2022-07-01  Code added for UDP receive experiment.  Does not impact the main workings, yet!  Can't enable UDP on this software and have DR2Video running!
+**    V2.1.2  2022-07-04  Update file detected status rectangle now activated.  
 **
 **  *** Things of note ***
 **  1. For a Synchro event need to select 'Synchro Event' in script settings for this to work correctly.  In theory as we have two Update files (Individual and Synchro) the script could select 
@@ -1364,11 +1365,22 @@ local function checkFile(id)
         obs.script_log(obs.LOG_INFO, string.format("checkFile() remove_TVBanner called"))
     end
     ]]    
-      
+     
+    local source = obs.obs_get_source_by_name("Update_File_Detected") -- disable text Source (UpdateFileDetected)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+    end
+    obs.obs_source_release(source)
+
     local fs, err = io.open(textFileD, "rb") --try to open the Update text file, if it exists then the data file has been updated, process the contents and update TV overlays
     if fs then
         fs:close()
         os.remove(textFileD) --  remove trigger file
+        local source = obs.obs_get_source_by_name("Update_File_Detected") -- enable text Source (UpdateFileDetected)
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+        end
+        obs.obs_source_release(source)
         if disableUpdate then  -- if disable_Update Hotkey pressed then ignore file update
             return
         end
