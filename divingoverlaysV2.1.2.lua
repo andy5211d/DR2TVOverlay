@@ -75,12 +75,12 @@
 
 local obs = obslua
 local socket = require("ljsocket")  -- udp experiment
---local bit = require("bit")
+--local bit = require("bit")   -- likly needed to decode the UDP stream.
 
 local our_server1 = nil
---local our_server2 = nil
---local our_server3 = nil
---local our_server4 = nil
+--local our_server2 = nil               -- udp experiment
+--local our_server3 = nil               -- udp experiment
+--local our_server4 = nil               -- udp experiment
 local portClient = 58091            -- udp experiment, id the main port for DR broadcasts
 --local portServer = 58092            -- udp experiment
 --local portWebUpdate = 58093         -- udp experiment, to send to LiveResults via DR2Web
