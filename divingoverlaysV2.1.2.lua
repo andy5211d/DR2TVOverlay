@@ -74,8 +74,8 @@
 ]]
 
 local obs = obslua
-local socket = require("ljsocket")  -- udp experiment
---local bit = require("bit")   -- likly needed to decode the UDP stream.
+--local socket = require("ljsocket")  -- udp experiment
+--local bit = require("bit")   -- likly needed to decode the UDP stream experiment.
 
 local our_server1 = nil
 --local our_server2 = nil               -- udp experiment
@@ -86,9 +86,9 @@ local portClient = 58091            -- udp experiment, id the main port for DR b
 --local portWebUpdate = 58093         -- udp experiment, to send to LiveResults via DR2Web
 --local portAwards = 58094            -- udp experiment, server port for awards
 Address1 = socket.find_first_address("*", portClient)
---Address1 = socket.find_first_address("*", portServer)
---Address1 = socket.find_first_address("*", portWebUp)
---Address1 = socket.find_first_address("*", portAwards)
+--Address1 = socket.find_first_address("*", portServer)               -- udp experiment
+--Address1 = socket.find_first_address("*", portWebUp)                -- udp experiment
+--Address1 = socket.find_first_address("*", portAwards)               -- udp experiment
 
 local textFile, textFileI, textFileS, textFileI_B, textFileS_B  -- textfile = the text file to be processed.  textFileI = the Individual event text file name (and file location) to be checked, then read into textFile.  Simmulary textFileS the Synchro event text file
 local textFileD, textFileDI, textFileDS, textFileDI_B, textFileDS_B   -- DR dummy text file to act as new data trigger. Simmulary for B event
@@ -1277,7 +1277,7 @@ function remove_TVbanner()
         return
     end
     --[[
-    else
+    else  -- leftover from auto banner remove at the end of the event.  Not reliable and when Recorders display Results banner re-displays!!
         if tvBanner_removed then
             obs.remove_current_callback()
             return
@@ -1555,7 +1555,7 @@ end -- init()
 ------------------------------------------------------------------------------------
 --    ***        OBS Set-up functions for user configurable items          ***    --
 ------------------------------------------------------------------------------------
--- Hotkey definitions and default settings (not realy OBS Set-up functions)
+-- Hotkey definitions and default settings, (not realy OBS Set-up functions).  Don't use F11 as it is a predefined 'Full Screen' trigger
 hk = {}
 key_1 = '{ "htk_1": [ { "key": "OBS_KEY_F1" } ], '   -- HK to temp remove_overlays
 key_2 = '  "htk_2": [ { "key": "OBS_KEY_F2" } ], '   -- HK to temp display_overlays (all)
@@ -1621,7 +1621,6 @@ function script_load(settings)
 end
 
 -- A function named "script_unload" will be called on removal of script
-
 function script_unload()
 --[[    if our_server1 ~= nil then
         print('Shutting down our server')
