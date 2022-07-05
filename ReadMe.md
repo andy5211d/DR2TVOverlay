@@ -89,13 +89,24 @@ in the correct location or run an event or two (B Event) in Diverecorder to gene
 to map them. One event will need to be Event B to produce the required files.  This file mapping should only need to be done
 once, on initial installation of the script. 
 
+Your video settings may be different as will be dependent upon the camera you use and the bandwidth available for the stream
+out to the internet and the performance of the computer used for streaming.  These are the settings that seem to work well
+for us in the UK with >8Mbps internet service:  
+
+1. Go to File, Settings and then select Output. Under 'Streaming' select a Video Bitrate of 4600Kbps and whatever encoder you
+hardware supports.  If you have a machine that provides hardware encoding this will be visible under the Encoder option. Use
+hardware encoding if available.   
+2. In the 'Video' setting again select a resolution your system can support; we use 1920 x 1080 (16:9) at 50 FPS PAL.  This
+should be same as your camera output.  If your camera supports progressive framing for the video output then select this
+option, (1080p @ 50PAL).  
+
 # Usage
 These operating instructions assume that the user is familiar with Diverecorder and OBS-Studio.  Both programs have lots of
 on-line resources on set-up and operation and thus will not be repeated here.  Diverecorder's DR2Video should be loaded and
-the scoreboard enabled before OBS-Studio will function correctly (as well of course Diverecorder running an event!).  It is
+its scoreboard enabled before OBS-Studio will function correctly (as well of course Diverecorder running an event!).  It is
 not important the exact load sequence but I tend to run DR2Video before OBS-Studio.
 
-The default start-up of the script has the following settings:
+The default start-up of the script has the following settings: (does not seem to be consistent, toggle each after start-up!)
 - Individual Event (F9)
 - Event A (F10)
 - Event Overlay top left (F12)
@@ -123,10 +134,11 @@ experimenting with this capability!
 
 ## Screenshots
 
-The DR2TVOverlay script generates two overlay banners, a smallish Event banner at the top, either top left or top right
-dependent upon the use of Hotkey F12.  The Hotkey status Dock shows the current position of the event banner in the F12
-icon.  And a larger dive information banner across the bottom which will show the divers name and dive description and 
-then after the judges have entered their awards into DR the divers name and the individual awards, ranking and totals.
+The DR2TVOverlay OBS script generates two overlay banners, a smallish Event banner at the top, either top left or top
+right dependent upon the use of Hotkey F12.  The Hotkey status Dock shows the current position of the event banner in 
+the F12 icon.  And a larger dive information banner across the bottom which will show the divers name and dive 
+description and then after the judges have entered their awards into DR the divers name and the individual awards, ranking
+and totals.
 
 For an Individual event the video with a dive description overlay will look something like this:
 ![gif](/gifs/IndividualDescription.gif)
@@ -145,17 +157,28 @@ The script will automatically cater for a differing number of judges with a mini
 Synchro events only 9 and 11 judges are supported.  
 
 # To Do
-Improve the above instructions!   
+Improve the above instructions!  
+
+Figure out why the Hotkeys do not start in a known state!  Sometimes the settings are not what the 'Hotkeys' status dock
+show on first run!  User needs to toggle each a few times to 'synch'.  
 
 Configure a useful remote control capability for OBS-Studio.  Several apps are available such as UPDeck, OBS Blade and
-Touch Portal, all for iPhone and I guess for other portable devices.  Not used either for an event, yet, and would require
-a WiFi connection, something not generally used for a Diverecorder set-up!
+Touch Portal, all for iPhone and I guess for other portable devices as well.  Not used either for an event, yet, and would
+require a WiFi connection, something not generally used for a Diverecorder set-up!
 
 Generate 'deductions' Hotkeys with associated descriptive text.  In this version of DR2TVOverlay the display of the reason
 for the deduction cannot be automated.  The necessary data is not available in DR2Video to automatically trigger a 
 deductions overlay/description.
 
-Use the UDP data stream from Diverecorder, rather than the current text 'file update' methodology, to provide the
-information needed for the overlays.  
+Use the UDP data stream from Diverecorder to provide the information needed for the overlays.   This would replace the
+current 'file update' methodology and associated code loops and consequential screen update delays.  Work in progress...
 
 Make the main overlay dynamic in its length so as to remove the 'white space' when events have few judges.
+
+Hotkey F3 seems unnecessary in my limited experience of running events.  However a 'Re-display' option would be useful.
+F3 may get re-purposed...
+
+A few times OBS has halted with what seems to be a problem with file access.  This then crashes DR2Video which cannot be
+recovered without a re-start.  It has been noticed that forcing a file close on OBS seems to recover the situation, a
+Hotkey to do this maybe a temporary solution, until the reason is found.  Seems to be related to an 'empty' data file as
+Lua cannot handle a 'Nul' field, but not yet fully understood why that type of file is generated by DR2Video.  
