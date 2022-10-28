@@ -13,16 +13,16 @@
 **  OBS Lua Script :- divingoverlaysVx.y.z.lua
 **  matching OBS Source JSON File :- divingoverlays-sourceVx.y.z.json
 **
-**  Provides a number of OBS-Studio Text(GDI+) Sources which displays the event information from DiveRecorder (DR) onto the event video stream.  Uses the data provided by DR's 
-**  DR2Video software.  Automatically checks for the *Update files and if detected displays the new information.   Has the capability to automatically hide the dive 
-**  information banner and re-display it when DR file changes detected.  Works for both Individual events and Synchro events and a vairable number of judges.  May get updated someday
-**  to work for simultanious events (A & B) as DR2Video has this capability but never likley to be updated for a skills circuit!  UDP script components by OBS Forum's John Hartman, with thanks. 
+**  Provides a number of OBS-Studio Text(GDI+) Sources which displays the event information from DiveRecorder (DR) onto the event video stream.  Uses the data provided by DR on the network.
+**  Receives the broadcast data on the udp port(s) and after checking displays the new information.   Has the capability to automatically hide the dive 
+**  information banner and re-display it when DR data changes.  Works for both Individual events and Synchro events and a vairable number of judges.  Will work for simultanious events but only 
+**  display the data for one of the simultanious events (A or B) but never likley to be updated for a skills circuit!  UDP script components by OBS Forum's John Hartman, with thanks. 
 **
 **    V3.0.0a  2022-07-05  A developement branch from V2.1.2 to implement UDP communications.  Don't use, unlikly to be working!!
+**    V3.0.0b  2022-10-25  Further deveopement on the use of UDP for communications.  Mainly rationalisation of the code and removal of file monitoring code.  Don't use, unlikly to be fully working!!
+**    V3.0.0c  2022-10-28  Working version using UDP communications with DR.  Penalty description now included in awards as approporate.
 **
-**  The programmer should refere to Malcolm's spreadsheet listing all the components of the UDP data packets and the different UDP packet types.  (add file name here but it has not been released by Malcolm!)
-**
-**
+**  
 **        Packet ID (REFEREE)       split_string2[1]            Packet ID (UPDATE)
 **        a or b event              split_string2[2]
 **        Sending Computer ID       split_string2[3]            Sending Computer ID
@@ -64,7 +64,7 @@
 **        Message 1 - Line 1 of 8   split_string2[39]
 **        Message 2                 split_string2[40]
 **        Message 3                 split_string2[41]
-**        Message 4                 split_string2[42]
+**        Message 4 ( ½  a store)   split_string2[42]
 **        Message 5                 split_string2[43]
 **        Message 6                 split_string2[44]
 **        Message 7                 split_string2[45]
@@ -74,7 +74,7 @@
 **        Show prediction           split_string2[49]
 **        Number of Judges          split_string2[50]
 **        Penalty code              split_string2[51]
-**        Station no for cct events split_string2[52]
+**        Station No for cct events split_string2[52]
 **        Number of stations        split_string2[53]
 **        D1 First Name             split_string2[54]
 **        D1 Team Name              split_string2[55]
@@ -82,28 +82,27 @@
 **        D2 First Name             split_string2[57]
 **        D2 Team Name              split_string2[58]
 **        D2 Team Code              split_string2[59]
-**        Long Event Name           split_string2[60]
+**        Long event name           split_string2[60]
 **        Dive Description          split_string2[61]
 **        Meet Title                split_string2[62]
 **        No of Rounds in event     split_string2[63]
 **        No of Divers in event     split_string2[64]
 **        Short dive description    split_string2[65]
 **        Conversion factor         split_string2[66]
-**        Short Event Name          split_string2[67]
+**        Short event name          split_string2[67]
 **        Team A2                   split_string2[68]
 **        Team code A2              split_string2[69]
 **        Team B2                   split_string2[70]
 **        Team code B2              split_string2[71]
 **        Seconds per dive          split_string2[72]
-**        Do not Rank flag          split_string2[73]
+**        Do Not Rank flag          split_string2[73]
 **        Team event                split_string2[74]
 **        eom  (^)                  split_string2[75]
-
 ]]
 
 local obs = obslua
 local socket = require("ljsocket")
---local bit = require("bit")   -- likly needed to decode the UDP stream?
+--local bit = require("bit")   -- likly needed to decode the UDP stream the web says but so far not used?
 
 local our_server1 = nil
 --local our_server2 = nil
@@ -120,6 +119,7 @@ Address1 = socket.find_first_address("*", portClient)
 
 local textFile, flagLoc, textFileS, flagExt, textFileS_B  -- textfile = the text file to be processed.  flagLoc = the Individual event text file name (and file location) to be checked, then read into textFile.  Simmulary textFileS the Synchro event text file
 local textFileD, textFileDI, textFileDS, textFileDI_B, textFileDS_B   -- DR dummy text file to act as new data trigger. Simmulary for B event.  Now not neded for UDP comms - to be deleted
+local currentDataClient  -- to check if latest received data has changed
 local interval = 1000  -- (ms), time between update file checks   -- Again now not needed for UDP communications
 local dinterval  -- the time to display the TV overlay after update
 local debug  -- turn on or off debug information display in the Log
@@ -159,11 +159,9 @@ local plugin_def = {
     output_flags = bit.bor(obs.OBS_SOURCE_CUSTOM_DRAW),
 }
 
-
 -- called when an update to the DR text file is detected.  Process DR data in the file then display and for a user determined period if Overlay hide option not disabled.
-local function update(k, v)
-    -- first line in the DR text file [data(k)], not used by this script 
-    obs.script_log(obs.LOG_INFO, string.format("start update(k, v)"))    -- show in log what is happening
+local function update(v)
+    obs.script_log(obs.LOG_INFO, string.format("start update(v)"))    -- show in log what is happening
     if debug then
         obs.script_log(obs.LOG_INFO, string.format("Event Complete? %s", eventComplete))
         obs.script_log(obs.LOG_INFO, string.format("tvBanner Removed? %s", tvBanner_removed))
@@ -176,21 +174,10 @@ local function update(k, v)
         return
     end
 
-    if v then -- Is second line of data(v) present? Just checking again!
-        local result = {} -- empty array where we will store data from the UDP data stream
-        local delimiter = ("|") -- UDP data string delimiter chr
-        for match in (v .. delimiter):gmatch("(.-)" .. delimiter) do -- fill the array
-            table.insert(result, match)
-        end
-        split_string2 = result -- generates an array with entries from the UDP data packet
-        if split_string2[1]  ~= "REFEREE" then return end   -- don't process other port 58091 UDP data packets at this time!!        
-        if split_string2[74] ~= nil then -- check if empty field
-            split_string2[74] = string.sub(split_string2[74], 1, -2) -- CR present at end of data packet so remove from the last field else Lua gets upset when trying to displaying the last field
-        end  
-    end
+    split_string2 = v
     if split_string2[32] == ("") then 
-      split_string2[32] = (" ")
-      obs.script_log(obs.LOG_INFO, string.format("Nil detected in Rank field "))
+       split_string2[32] = (" ")
+       obs.script_log(obs.LOG_INFO, string.format("Nil detected in Rank field (first round?)"))
     end
     eventComplete = false
     
@@ -217,12 +204,6 @@ local function update(k, v)
     tvBanner_removed = false -- as we are about to display dive data or awards!
 
     -- generate country flag or club logo file info from udp data.  This is a local flag file not from a website as outlined above in notes
---    local index = flagExt:match'^.*().'  -- find last occurance of '.' file extension seperator'
-  
---    local index = flagLoc:match'^.*()\\'  -- find last occurance of the Windows path seperator
---    flag_file = string.insert(flagLoc, split_string2[56] .. flagExt .. " ", index)  
---    flag_file = string.insert(flagLoc, "Default.png", index)  
---    local flag_file = flagLoc .. split_string2[56].. "." .. flagExt  -- an OBS user entered location and file extension.
     local flag_file = "C:\\Users\\The Trust\\Documents\\OBS\\flags\\" .. split_string2[56].. ".png"  -- temp solution
     if debug then
         obs.script_log(obs.LOG_INFO, string.format("Flag File = " .. flag_file))
@@ -257,17 +238,24 @@ local function update(k, v)
         obs.obs_source_release(source)
     end
 
-    -- now generate lineone of the overlay, the Divers information, preceded by rank
-    display1a = (" " .. split_string2[32] .. " ")
-    lineOne = string.insert(lineOne, display1a, 0)
-    displayName = (split_string2[9]) -- display name and club
-    lineOne = string.insert(lineOne, displayName, 5)
-    display1b = (" ")  
-    scores1 = split_string2[29]
+    -- new generqte the Penalty text if there is one
+    if     split_string2[51] == "0" then penalty = (" ")
+    elseif split_string2[51] == "1" then penalty = ("   Failed Dive ")
+    elseif split_string2[51] == "2" then penalty = ("    Restarted \n    -2 points ")
+    elseif split_string2[51] == "3" then penalty = ("Flight or Danger \n  Max 2 points ")
+    elseif split_string2[51] == "4" then penalty = ("  Arm position \n  Max 4½ points ")
+    end
 
-    -- now generate the rest of the text displays
+    -- now generate the rest of the displays
     --                  >>>> *** If a Synchro event then *** <<<<<
     if synchro then
+        -- now generate lineone of the overlay, the Divers, preceded by rank
+        display1a = (" " .. split_string2[32] .. " ")
+        lineOne = string.insert(lineOne, display1a, 0)
+        displayName = (split_string2[54] .. ' ' .. split_string2[10] .. ' + ' .. split_string2[57] .. ' ' .. split_string2[12] .. '  ' .. split_string2[56] .. '/' .. split_string2[59]) -- display names + clubs
+        lineOne = string.insert(lineOne, displayName, 5)
+        display1b = (" ")  
+        scores1 = split_string2[29]
         if split_string2[17] ~= (" ") then -- if awards in J1 field then display them
             sourcelineTwo = " " -- Empty string so nothing displayed and debug works correctly
             local source = obs.obs_get_source_by_name("JudgeAwards") -- Enable awards Text Source group (else 11 individual text boxes to enable!)
@@ -550,7 +538,7 @@ local function update(k, v)
             elseif split_string2[14] == "C" then position = (", tucked")
             elseif split_string2[14] == "D" then position = (", free position")
             end
-            sourcelineTwo = (split_string2[62] .. position)          
+            sourcelineTwo = (split_string2[61] .. position)      -- dive description + position    
             display2b = "!"
             display2a = "!"
             lineTwo = string.insert(lineTwo, sourcelineTwo, 0)
@@ -560,6 +548,13 @@ local function update(k, v)
 
 --  >>>>> Individual event <<<<<<
     else            --  >>>> *** As NOT a Synchro event assume only 5 or 7 judges for individual events, rest of J fields must be 'blank'.  Use awards line blank space for BannerLine2 data  *** <<<<
+        -- now generate lineone of the overlay, the Divers information, preceded by rank
+        display1a = (" " .. split_string2[32] .. " ")
+        lineOne = string.insert(lineOne, display1a, 0)
+        displayName = (split_string2[9]) -- display name and club
+        lineOne = string.insert(lineOne, displayName, 5)
+        display1b = (" ")  
+        scores1 = split_string2[29]
         if split_string2[25] ~= (" ") then -- then nothing in J9 award position so assume individual event and disable the 9 & 11 synchro judge role labels
                                            -- should not have got to this point if Synchro but no harm in checking the awards to confirm!
             local source = obs.obs_get_source_by_name("SynchroJLabels11") -- disable synchro11 judge role labels
@@ -732,19 +727,17 @@ local function update(k, v)
             elseif split_string2[14] == "C" then position = (", tucked")
             elseif split_string2[14] == "D" then position = (", free position")
             end
-            sourcelineTwo = (split_string2[62] .. position)
+            sourcelineTwo = (split_string2[61] .. position)
             lineTwo = string.insert(lineTwo, sourcelineTwo, 0) -- Insert dive description at the start of lineTwo
             obs.timer_add( function() remove_TVbanner() end,  dinterval )   -- hide overlay after timer period            
         end
     end
 
-    if debug then -- show the overlay text strings in the log (not the awards though!) This needs sorting for V2.x.x as most of these strings now not used!
+    if debug then -- show the overlay text strings in the log (not the awards though!) This needs sorting for V3.x.x as most of these strings now not used!
         obs.script_log(obs.LOG_INFO, string.format("display1a Length:" .. string.len(display1a) .. " =" .. display1a))
         obs.script_log(obs.LOG_INFO, string.format("display1b Length:" .. string.len(display1b) .. " =" .. display1b))
         obs.script_log(obs.LOG_INFO, string.format("lineOne Length:" .. string.len(lineOne) .. " =" .. lineOne))
         obs.script_log(obs.LOG_INFO, string.format("sourcelineTwo=" .. string.len(sourcelineTwo) .. " =" .. sourcelineTwo))
---        obs.script_log(obs.LOG_INFO, string.format("display2a Length:" .. string.len(display2a) .. " =" .. display2a))
---        obs.script_log(obs.LOG_INFO, string.format("display2b Length:" .. string.len(display2b) .. " =" .. display2b))
         obs.script_log(obs.LOG_INFO, string.format("lineTwo Length:" .. string.len(lineTwo) .. " =" .. lineTwo))
     end
 
@@ -776,13 +769,22 @@ local function update(k, v)
         obs.obs_data_release(settings)
         obs.obs_source_release(source)
     end
+        
+    local source = obs.obs_get_source_by_name("Penalty") -- Overlay Penalty text source insert
+    if source ~= nil then
+        local settings = obs.obs_data_create()
+        obs.obs_data_set_string(settings, "text", penalty)
+        obs.obs_source_update(source, settings)
+        obs.obs_data_release(settings)
+        obs.obs_source_release(source)
+    end
 end -- update(k, v)
 
 
 -- String insert function.  Keeps original string length; well almost! First position is 0, not 1 as per usual with Lua.  So use 0 for the position variable if 
 -- insert required at beginning of str1.  If new string longer than original (because insert is towards the end and inserted string is longer than remaining length) 
--- error printed in log.  Function will not fail though, however all formatting bets for this OBS script are off as returned string will be longer than 
--- available display space!!!
+-- error printed in log.  Function will not fail though, however all screen formatting bets for this OBS script are off as returned string will be longer than 
+-- available on screen display space!!!  Function now also used for Flag file location string generation and often does return an error; but thats OK in this instance.
 function string.insert(str1, str2, pos)
     local lenstr1 = string.len(str1)
     local lenstr2 = string.len(str2)
@@ -1323,7 +1325,6 @@ function remove_TVbanner()
     obs.remove_current_callback()  -- stops remove_TVBanner running endlesly
     
     tvBanner_removed = true
---    eventComplete = false
     
 end --remove_TVbanner()
 
@@ -1369,72 +1370,70 @@ function tvBanner_remove()
     obs.timer_remove(remove_TVbanner) 
 end  -- tvBanner_remove()
 
+-- process the UDP messages
+local function processMessage(k, v, x)
+    if k then -- Is there a first UDP port message present (k)?
+        local resultK = {} -- empty array where we will store data from the first UDP data stream
+        local delimiter = ("|") -- UDP data string delimiter chr
+        for match in (k .. delimiter):gmatch("(.-)" .. delimiter) do -- fill the array
+            table.insert(resultK, match)
+        end
+        if debug then
+           print ('UDP message "' .. resultK[1] .. '" received, length is ' .. #resultK .. ' fields. Last field is: ' .. resultK[#resultK])  
+        end 
+        --  resultK generated array with entries from the UDP data packet             
+        if resultK[#resultK] ~= nil then -- check if empty field at end
+            resultK[#resultK] = string.sub(resultK[#resultK], 1, -2) -- CR present at end of data packet so remove from the last field else Lua gets upset when trying to displaying the last field
+        end 
 
-local function checkFile(id)  -- *** possibly not needed for udp operation ***
-    -- if the lua script has reloaded then stop any old timers and return
-    if id < activeId then
-        obs.remove_current_callback()
-        return
+        if resultK[1] == "REFEREE" then         
+            update(resultK)  -- Process the 'REFEREE' message
+        end 
+        if resultK[1] == "AVIDEO" then
+            -- Do nothing at this time
+        end
     end
-    -- script not reloaded so check for Update files (DUpdate, SUpdate and Event B versions)     
-     
-    local source = obs.obs_get_source_by_name("Update_File_Detected") -- disable text Source (UpdateFileDetected)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-    end
-    obs.obs_source_release(source)
 
-    local fs, err = io.open(textFileD, "rb") --try to open the Update text file, if it exists then the data file has been updated, process the contents and update TV overlays
-    if fs then
-        fs:close()
-        os.remove(textFileD) --  remove trigger file
-        local source = obs.obs_get_source_by_name("Update_File_Detected") -- enable text Source (UpdateFileDetected)
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, true)
+    --[[
+    if v then -- Is there a second UDP port message present (v)?
+        local resultV = {} -- empty array where we will store data from the UDP data stream
+        local delimiter = ("|") -- UDP data string delimiter chr
+        for match in (v .. delimiter):gmatch("(.-)" .. delimiter) do -- fill the array
+            table.insert(resultV, match)
         end
-        obs.obs_source_release(source)
-        if disableUpdate then  -- if disable_Update Hotkey pressed then ignore file update
-            return
+        if debug then
+           print ('UDP message "' .. resultV[1] .. '" received, length is ' .. #resultV .. ' fields. Last field is: ' .. resultV[#resultV])  
         end
-        obs.script_log(obs.LOG_INFO, string.format("\nValid 'Update' File Detected"))
-        local f, err = io.open(textFile, "rb")  -- open the DR2Video text file
-        if f then
-            line1 = f:read("*line") -- read the first line.  Future version may remove line 1, (then need to change DR2Video options to remove headers as well)!
-            line2 = f:read("*line") -- read the second line
-            if line2 then -- is there something in the file? Must be data in the file to get to here but check anyway!
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format(line2))
-                end
-                if current[line2] ~= line2 then  -- check for changed contents
-                    current[line2] = line2
-                    fileContentsChanged = true
-                    eventComplete = false
-                    local source = obs.obs_get_source_by_name("Event_Complete") -- disable blue status rectangle on 'Status' source dock
-                    if source ~= nil then
-                        obs.obs_source_set_enabled(source, false)
-                    end
-                    obs.obs_source_release(source) 
-                else 
-                    fileContentsChanged = false                    
-                end
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format("File contents changed? %s", fileContentsChanged))
-                    obs.script_log(obs.LOG_INFO, string.format("Synchro selected: %s", synchro))
-                    obs.script_log(obs.LOG_INFO, string.format("B Event selected: %s", eventB))
-                    obs.script_log(obs.LOG_INFO, string.format("Event Complete: %s", eventComplete))
-                    obs.script_log(obs.LOG_INFO, string.format("Disable Updates: %s", disableUpdate))
-                    obs.script_log(obs.LOG_INFO, string.format("TVBanner removed: %s", tvBanner_removed))
-                end                
-                update(line1, line2) -- yes there is data, process the file contents using the "update(k,v)" function.  k=line1; v=line2
-            end
-            f:close()
-        else
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Error reading Synchro text file: ", err))
-            end
-        end
+        -- resultV generated array with entries from the UDP data packet
+        if resultV[#resultV] ~= nil then -- check if empty field at end
+            resultV[#resultV] = string.sub(resultV[#resultV], 1, -2) -- CR present at end of data packet so remove from the last field else Lua gets upset when trying to displaying the last field
+        end 
+
+        if resultV[1] == "REFEREE" then         
+            update(resultV)  -- Process the 'REFEREE' message
+        end 
     end
-end -- checkFile(id)
+    if x then -- Is there a third UDP port message present (x)?
+        local resultX = {} -- empty array where we will store data from the UDP data stream
+        local delimiter = ("|") -- UDP data string delimiter chr
+        for match in (x .. delimiter):gmatch("(.-)" .. delimiter) do -- fill the array
+            table.insert(resultX, match)
+        end
+        if debug then
+           print ('UDP message "' .. resultX[1] .. '" received, length is ' .. #resultX .. ' fields. Last field is: ' .. resultX[#resultX])  
+        end
+        --  resultX generated array with entries from the UDP data packet
+        if resultX[#resultX] ~= nil then -- check if empty field at end
+            resultX[#resultX] = string.sub(resultX[#resultX], 1, -2) -- CR present at end of data packet so remove from the last field else Lua gets upset when trying to displaying the last field
+        end 
+
+        if resultX[1] == "REFEREE" then         
+            update(resultX)  -- Process the 'REFEREE' message
+        end  
+    end
+    --]]
+
+end     -- end processMessage()
 
 
 function UDPtimer_callback() 
@@ -1444,8 +1443,6 @@ function UDPtimer_callback()
         obs.remove_current_callback()
         return
     end   
-
-
     local source = obs.obs_get_source_by_name("Update_File_Detected") -- disable text Source (UpdateFileDetected)
     if source ~= nil then
         obs.obs_source_set_enabled(source, false)
@@ -1454,9 +1451,8 @@ function UDPtimer_callback()
     repeat
         local dataClient, status = our_server1:receive_from()
         if dataClient then
-
-            if current[dataClient] ~= dataClient then
-                current[dataClient] = dataClient
+             if currentDataClient ~= dataClient then
+                currentDataClient = dataClient
                 fileContentsChanged = true
                 eventComplete = false                
                 local source = obs.obs_get_source_by_name("Update_File_Detected") -- enable text Source (UpdateFileDetected)
@@ -1465,7 +1461,8 @@ function UDPtimer_callback()
                 end
                 obs.obs_source_release(source)         
                 print("dataClient: " .. dataClient)
-                update(' ', dataClient) 
+                processMessage(dataClient, '', '')  -- allow for receiving messages from three ports!
+               -- update(dataClient)
                 local source = obs.obs_get_source_by_name("Event_Complete") -- disable blue status rectangle on 'Status' source dock
                     if source ~= nil then
                         obs.obs_source_set_enabled(source, false)
@@ -1533,20 +1530,6 @@ function init()
     -- ensure nothing displayed on startup or function change
     tvBanner_remove()
 
-    -- select the text files to be displayed in the overlays and the associated update trigger file  -- Not needed for UDP comms
-    --[[ synchro then      
-            textFile = textFileS       -- Event A data file.  No B Event possible!
-            textFileD = textFileDS     -- Event A trigger file.  No B Event possible!
-    else  -- individual event
-        if eventB then
-            textFile = flagExt     -- Event B data file
-            textFileD = textFileDI_B   -- Event B trigger file
-        else
-            textFile = textFileI       -- Event A data file
-            textFileD = textFileDI     -- Event A trigger file
-        end
-    end
-    ]]
 end -- init()
 
 
@@ -1576,7 +1559,7 @@ default_hotkeys =
     {id='htk_8', des='Toggle to Display Event A or Event B ', callback=toggle_event_a_or_b},      
     }
 
--- A function named "script_load" will be called on startup
+-- The function named "script_load" will be called on startup
 function script_load(settings) 
     s = obs.obs_data_create_from_json(json_s)
     for _,v in pairs(default_hotkeys) do 
@@ -1587,36 +1570,36 @@ function script_load(settings)
     end
     obs.obs_data_release(s)
 
+    -- Servers needed to get data from the four UDP ports
     our_server1 = assert(socket.create("inet", "dgram", "udp"))
     obs.script_log(obs.LOG_INFO, string.format("\nHostingClient udp at: " .. Address1:get_ip() .. ":" .. Address1:get_port()))
+    -- Must set "reuseaddr" or bind will fail when you reload the script    
+    assert(our_server1:set_option("reuseaddr", 1))    
+    -- Must set non-blocking to prevent the locking the OBS UI thread    
+    assert(our_server1:set_blocking(false))   
+    -- Bind our_port on all available local interfaces (??)
+    assert(our_server1:bind(Address1, portClient))     
+
 --    our_server2 = assert(socket.create("inet", "dgram", "udp"))
 --    obs.script_log(obs.LOG_INFO, string.format("HostingServer udp at: " .. Address2:get_ip() .. ":" .. Address2:get_port()))
+--    assert(our_server2:set_option("reuseaddr", 1))
+--    assert(our_server2:set_blocking(false))
+--    assert(our_server2:bind(Address2, portServer))
+
 --    our_server3 = assert(socket.create("inet", "dgram", "udp"))
 --    obs.script_log(obs.LOG_INFO, string.format("HostingWebUp udp at: " .. Address3:get_ip() .. ":" .. Address3:get_port()))
+--    assert(our_server3:set_option("reuseaddr", 1))
+--    assert(our_server3:set_blocking(false))
+--    assert(our_server3:bind(Address3, portWebUp))
+
 --    our_server4 = assert(socket.create("inet", "dgram", "udp"))
 --    obs.script_log(obs.LOG_INFO, string.format("HostingAwards udp at: " .. Address4:get_ip() .. ":" .. Address4:get_port()))
-
-    -- Must set "reuseaddr" or bind will fail when you reload the script
-    assert(our_server1:set_option("reuseaddr", 1))
---    assert(our_server2:set_option("reuseaddr", 1))
---    assert(our_server3:set_option("reuseaddr", 1))
 --    assert(our_server4:set_option("reuseaddr", 1))
-    
-    -- Must set non-blocking to prevent the locking the OBS UI thread
-    assert(our_server1:set_blocking(false))
---    assert(our_server2:set_blocking(false))  
---    assert(our_server3:set_blocking(false))      
 --    assert(our_server4:set_blocking(false))
-
-    -- Bind our_port on all local interfaces
-    assert(our_server1:bind(Address1, portClient))
---    assert(our_server2:bind(Address2, portServer))
---    assert(our_server3:bind(Address3, portWebUp))
 --    assert(our_server4:bind(Address4, portAwards))
-
 end
 
--- A function named "script_unload" will be called on removal of script
+-- The function named "script_unload" will be called on removal of script
 function script_unload()
     if our_server1 ~= nil then
         print('Shutting down our server')
@@ -1642,14 +1625,10 @@ function script_unload()
 --]]    
 end
 
--- A function named "script_update" will be called when settings are changed by the user
+-- The function named "script_update" will be called when settings are changed by the user
 function script_update(settings)
     flagLoc = obs.obs_data_get_string(settings, "flagLoc") -- Flag file path
-    textFileS = obs.obs_data_get_string(settings, "textFileS") -- Synchro data file, usually Synchro.txt
-    flagExt = obs.obs_data_get_string(settings, "flagExt") -- Flag file extension
-    textFileDI = obs.obs_data_get_string(settings, "textFileDI") -- Dummy file to act as Individual event new data trigger, usualy DUpdate.txt
-    textFileDS = obs.obs_data_get_string(settings, "textFileDS") -- Dummy file to act as Synchro event new data trigger, usualy SUpdate.txt
-    textFileDI_B = obs.obs_data_get_string(settings, "textFileDI_B") -- Dummy file to act as Individual B event new data trigger, usualy DUpdateB.txt
+    flagExt = obs.obs_data_get_string(settings, "flagExt") -- Flag file extension 
     dinterval = obs.obs_data_get_int(settings, "dinterval") -- Overlay display period
     debug = obs.obs_data_get_bool(settings, "debug") -- Set debug on or off
 
@@ -1663,48 +1642,31 @@ function script_update(settings)
     init()  -- set-up done, now start the main work of this script!
 end
 
--- A function named "script_description" returns the description shown to the user
+-- The function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data as a Video Overlay</h></center>
-             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  The approporate OBS Source .json file must be imported into OBS for this video overlay to function correctly. ***** THIS IS A UDP DEVELOPMENT VERSION!!  DO NOT USE UNLESS YOU WANT A LOT OF UNEXPLAINED GREEF!! ***** </p><p>Andy - V3.0.0 2022Jul05</p>]]
+             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  The approporate OBS Source .json file must be imported into OBS for this video overlay to function correctly. ***** THIS IS A UDP DEVELOPMENT VERSION!!  SEEMS TO BE WORKING BUT NOT FULLY TESTED YET!! ***** </p><p>Andy - V3.0.0 2022Oct28</p>]]
 end
---[[
-function script_description()   -- wonder if this construct works better for maintaining version ?
-    return "<b>" .. plugin_info.description .. "</b><br>" ..
-        "Version: " .. plugin_info.version .. "<br>" ..
-        "<a href=\"" .. plugin_info.url .. "\">" .. plugin_info.url .. "</a><br><br>" ..
 
-end
-]]
-
-
--- A function named script_properties defines the properties that the user can change for the entire script module itself
+-- The function named script_properties defines the properties that the user can change for the entire script module itself
 function script_properties()
     local props = obs.obs_properties_create()
     obs.obs_properties_add_path(props, "flagLoc", "Path to flags folder (select any file)", obs.OBS_PATH_FILE, "", nil)
     obs.obs_properties_add_path(props, "flagExt", "Select file with required extension", obs.OBS_PATH_FILE, "", nil)
-    obs.obs_properties_add_path(props, "textFileS", "Synchro DR2Video File", obs.OBS_PATH_FILE, "", nil)
-    obs.obs_properties_add_path(props, "textFileDI", "DR2Video Individual Update Trigger File", obs.OBS_PATH_FILE, "", nil)
-    obs.obs_properties_add_path(props, "textFileDI_B", "DR2Video Individual B Event Update Trigger File", obs.OBS_PATH_FILE, "", nil)
-    obs.obs_properties_add_path(props, "textFileDS", "DR2Video Synchro Event Update Trigger File", obs.OBS_PATH_FILE, "", nil)
     obs.obs_properties_add_int(props,  "dinterval", "TVBanner display period (ms)", 4000, 15000, 2000)
     obs.obs_properties_add_bool(props, "debug", "Show debug data in Log file")
     return props
 end
 
--- A function named "script_defaults" will be called to set the default settings and file locations
+-- The function named "script_defaults" will be called to set the default settings and file locations
 function script_defaults(settings)
     obs.obs_data_set_default_string(settings, "flagLoc", "C:/Users/<your UserID>/Documents/OBS/mdt/flags/anyfile.png")
     obs.obs_data_set_default_string(settings, "flagExt", "something.png")
-    obs.obs_data_set_default_string(settings, "textFileS", "C:/Users/<your UserID>/Documents/OBS/mdt/temp/Synchro.txt")
-    obs.obs_data_set_default_string(settings, "textFileDI", "C:/Users/<your UserID>/Documents/OBS/mdt/temp/DUpdate.txt")
-    obs.obs_data_set_default_string(settings, "textFileDS", "C:/Users/<your UserID>/Documents/OBS/mdt/temp/SUpdate.txt")
-    obs.obs_data_set_default_string(settings, "textFileDI_B", "C:/Users/<your UserID>/Documents/OBS/mdt/temp/DUpdateB.txt")
     obs.obs_data_set_default_int(settings,  "dinterval", 5000)
     obs.obs_data_set_default_bool(settings, "debug", false)
 end
 
--- A function named "script_save" will be called when the script is saved
+-- The function named "script_save" will be called when the script is saved
 -- NOTE: This function is usually used for saving extra data (such as a hotkey's settings).  Settings set via the 'properties' function are saved automatically.
 function script_save(settings)
   for k, v in pairs(hk) do
