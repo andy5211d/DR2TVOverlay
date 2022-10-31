@@ -1,7 +1,8 @@
 
 NOTE:
 Use divingoverlaysV2.1.2 the latest fully working version of this script, other scripts are kept on-line for my reference
-during ongoing development.
+during ongoing development.  Version 3.0.0x, UDP communications, is now working.  Once fully tested the following description
+will be changed to reflect the new version.  V2 is unlikely to be developed further.
 
 # Description
 DR2TVOverlay is an extension for [OBS Studio](https://obsproject.com/) built on top of its scripting facilities utilising the built-in embedded LuaJIT
