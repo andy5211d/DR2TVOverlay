@@ -16,20 +16,20 @@
 **  Provides a number of OBS-Studio Text(GDI+) Sources which displays the event information from DiveRecorder (DR) onto the event video stream.  Uses the data provided by DR on the network.
 **  Receives the broadcast data on the udp port(s) and after checking displays the new information.   Has the capability to automatically hide the dive 
 **  information banner and re-display it when DR data changes.  Works for both Individual events and Synchro events and a vairable number of judges.  Will work for simultanious events but only 
-**  display the data for one of the simultanious events (A or B) but never likley to be updated for a skills circuit!  UDP script components by OBS Forum's John Hartman, with thanks. 
+**  display the data for one of the simultanious events (A or B) but is never likley to be updated to work for a skills circuit!  UDP script components by OBS Forum's John Hartman, with thanks. 
 **
 **    V3.0.0a  2022-07-05  A developement branch from V2.1.2 to implement UDP communications.  Don't use, unlikly to be working!!
 **    V3.0.0b  2022-10-25  Further deveopement on the use of UDP for communications.  Mainly rationalisation of the code and removal of file monitoring code.  Don't use, unlikly to be fully working!!
-**    V3.0.0c  2022-10-28  Working version using UDP communications with DR.  Penalty description now included in awards as approporate.
-**
+**    V3.0.0c  2022-10-28  Working version using UDP communications from DR.  Penalty description now included in awards overlay as approporate. 
+**    V3.0.0d
 **  
-**        Packet ID (REFEREE)       split_string2[1]            Packet ID (UPDATE)
-**        a or b event              split_string2[2]
-**        Sending Computer ID       split_string2[3]            Sending Computer ID
-**        Event mode                split_string2[4]
-**        New Event                 split_string2[5]            Sending Computer IP Address
-**        Round                     split_string2[6]            Update file location on remote machine
-**        Attempt by diver          split_string2[7]            EOF
+**        Packet ID (58091 REFEREE) split_string2[1]          Packet ID (58091 UPDATE)                     Packet ID (58091 AVIDEO)            Packet ID (58092 DBSERVER)        Packet ID (58092 HELLO)
+**        a or b event              split_string2[2]          a or b event                                 a or b event                        (No end of message!)              DiveRecorder hostname
+**        Sending Computer ID       split_string2[3]          Sending Computer ID                          Sending Computer ID                 (looking for a server)            EOM 
+**        Event mode                split_string2[4]          Event mode                                   Event mode                                                            (reply)
+**        New Event                 split_string2[5]          Sending Computer IP Address                  EndofEvent (if it has!)
+**        Round                     split_string2[6]          Update file location on remote machine       EOF
+**        Attempt by diver          split_string2[7]          EOF
 **        Start No                  split_string2[8]
 **        D1 Full Name + Team       split_string2[9]
 **        D1 Family Name            split_string2[10]
@@ -117,8 +117,6 @@ Address1 = socket.find_first_address("*", portClient)
 --Address3 = socket.find_first_address("*", portWebUp)
 --Address4 = socket.find_first_address("*", portAwards)
 
-local textFile, flagLoc, textFileS, flagExt, textFileS_B  -- textfile = the text file to be processed.  flagLoc = the Individual event text file name (and file location) to be checked, then read into textFile.  Simmulary textFileS the Synchro event text file
-local textFileD, textFileDI, textFileDS, textFileDI_B, textFileDS_B   -- DR dummy text file to act as new data trigger. Simmulary for B event.  Now not neded for UDP comms - to be deleted
 local currentDataClient  -- to check if latest received data has changed
 local interval = 1000  -- (ms), time between update file checks   -- Again now not needed for UDP communications
 local dinterval  -- the time to display the TV overlay after update
@@ -161,7 +159,7 @@ local plugin_def = {
 
 -- called when an update to the DR text file is detected.  Process DR data in the file then display and for a user determined period if Overlay hide option not disabled.
 local function update(v)
-    obs.script_log(obs.LOG_INFO, string.format("start update(v)"))    -- show in log what is happening
+    obs.script_log(obs.LOG_INFO, string.format("start update(). Headder: " .. v[1]))    -- show in log what is happening
     if debug then
         obs.script_log(obs.LOG_INFO, string.format("Event Complete? %s", eventComplete))
         obs.script_log(obs.LOG_INFO, string.format("tvBanner Removed? %s", tvBanner_removed))
@@ -173,8 +171,62 @@ local function update(v)
     if eventComplete and tvBanner_removed and not fileContentsChanged then  -- try to stop the banner re-displaying when showing rankings.  Hmm, is this really doing what it says?
         return
     end
-
     split_string2 = v
+
+    -- now we are processing a message, update the OBS Status display for Synchro (F9) with current settings. This is in case this is a Synchro event and the user has forgoton to 
+    -- set this because the script will!
+    if synchro then
+        local source = obs.obs_get_source_by_name("Event_Type") -- Event type: Synchro
+        if source ~= nil then
+            local settings = obs.obs_data_create()
+            obs.obs_data_set_string(settings, "text", "Synchro Event")
+            obs.obs_source_update(source, settings)
+            obs.obs_data_release(settings)
+            obs.obs_source_release(source)
+        end   
+        local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- disable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, false)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F9_Function_Background_True"))
+            end
+        end
+        obs.obs_source_release(source)  
+        local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- enable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F9_Function_Background_False"))
+            end
+        end
+        obs.obs_source_release(source)
+     else 
+        local source = obs.obs_get_source_by_name("Event_Type") -- Event type: Individual
+        if source ~= nil then
+            local settings = obs.obs_data_create()
+            obs.obs_data_set_string(settings, "text", "Individual Event")
+            obs.obs_source_update(source, settings)
+            obs.obs_data_release(settings)
+            obs.obs_source_release(source)
+        end
+        local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- disable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, false)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F9_Function_Background_False"))
+            end
+        end
+        obs.obs_source_release(source)  
+        local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- enable background
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F9_Function_Background_True"))
+            end
+        end
+        obs.obs_source_release(source)     
+     end    -- end status update
+
     if split_string2[32] == ("") then 
        split_string2[32] = (" ")
        obs.script_log(obs.LOG_INFO, string.format("Nil detected in Rank field (first round?)"))
@@ -247,8 +299,8 @@ local function update(v)
     end
 
     -- now generate the rest of the displays
-    --                  >>>> *** If a Synchro event then *** <<<<<
-    if synchro then
+    --                 
+    if synchro then --  >>>> *** If a Synchro event then ... *** <<<<<
         -- now generate lineone of the overlay, the Divers, preceded by rank
         display1a = (" " .. split_string2[32] .. " ")
         lineOne = string.insert(lineOne, display1a, 0)
@@ -823,7 +875,7 @@ function toggle_event_position(pressed)  -- F12 Hotkey to toggle Event overlay p
        if source ~= nil then
            obs.obs_source_set_enabled(source, false)
            if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "Position1"))
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Position1"))
            end
        end
        obs.obs_source_release(source)  
@@ -831,7 +883,7 @@ function toggle_event_position(pressed)  -- F12 Hotkey to toggle Event overlay p
        if source ~= nil then
            obs.obs_source_set_enabled(source, true)
            if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "Position2"))
+               obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Position2"))
            end
        end
        obs.obs_source_release(source) 
@@ -851,7 +903,7 @@ function toggle_event_position(pressed)  -- F12 Hotkey to toggle Event overlay p
        if source ~= nil then
            obs.obs_source_set_enabled(source, false)
            if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "Event 2"))
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Event 2"))
            end
        end
        obs.obs_source_release(source)  
@@ -859,7 +911,7 @@ function toggle_event_position(pressed)  -- F12 Hotkey to toggle Event overlay p
        if source ~= nil then
            obs.obs_source_set_enabled(source, false)
            if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "Position2"))
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Position2"))
            end
        end
        obs.obs_source_release(source)  
@@ -867,7 +919,7 @@ function toggle_event_position(pressed)  -- F12 Hotkey to toggle Event overlay p
        if source ~= nil then
            obs.obs_source_set_enabled(source, true)
            if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "Position1"))
+               obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Position1"))
            end
        end
        obs.obs_source_release(source)  
@@ -988,7 +1040,7 @@ function disableUpdate_overlays(pressed)  --  F3 Hotkey to disable overlays upda
         if source ~= nil then
             obs.obs_source_set_enabled(source, false)
             if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F3_Function_Background_False"))
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F3_Function_Background_False"))
             end
         end
         obs.obs_source_release(source)  
@@ -996,7 +1048,7 @@ function disableUpdate_overlays(pressed)  --  F3 Hotkey to disable overlays upda
         if source ~= nil then
             obs.obs_source_set_enabled(source, true)
             if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "F3_Function_Background_True"))
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F3_Function_Background_True"))
             end
         end
         obs.obs_source_release(source)   
@@ -1014,7 +1066,7 @@ function disableUpdate_overlays(pressed)  --  F3 Hotkey to disable overlays upda
         if source ~= nil then
             obs.obs_source_set_enabled(source, false)
             if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F3_Function_Background_True"))
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F3_Function_Background_True"))
             end
         end
         obs.obs_source_release(source)  
@@ -1022,7 +1074,7 @@ function disableUpdate_overlays(pressed)  --  F3 Hotkey to disable overlays upda
         if source ~= nil then
             obs.obs_source_set_enabled(source, true)
             if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "F3_Function_Background_False"))
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F3_Function_Background_False"))
             end
         end
         obs.obs_source_release(source)   
@@ -1050,7 +1102,7 @@ function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-st
        if source ~= nil then
            obs.obs_source_set_enabled(source, false)
            if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F9_Function_Background_False"))
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F9_Function_Background_False"))
            end
        end
        obs.obs_source_release(source)  
@@ -1058,7 +1110,7 @@ function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-st
        if source ~= nil then
            obs.obs_source_set_enabled(source, true)
            if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "F9_Function_Background_True"))
+               obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F9_Function_Background_True"))
            end
        end
        obs.obs_source_release(source)          
@@ -1077,7 +1129,7 @@ function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-st
        if source ~= nil then
            obs.obs_source_set_enabled(source, false)
            if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F9_Function_Background_True"))
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F9_Function_Background_True"))
            end
        end
        obs.obs_source_release(source)  
@@ -1085,7 +1137,7 @@ function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-st
        if source ~= nil then
            obs.obs_source_set_enabled(source, true)
            if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "F9_Function_Background_False"))
+               obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F9_Function_Background_False"))
            end
        end
        obs.obs_source_release(source)       
@@ -1113,7 +1165,7 @@ function toggle_display_disable(pressed)  -- F5 Hotkey to permanently remove ove
           if source ~= nil then
               obs.obs_source_set_enabled(source, false)
               if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F5_Function_Background_False"))
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F5_Function_Background_False"))
               end
           end
           obs.obs_source_release(source)  
@@ -1121,7 +1173,7 @@ function toggle_display_disable(pressed)  -- F5 Hotkey to permanently remove ove
           if source ~= nil then
               obs.obs_source_set_enabled(source, true)
               if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "F5_Function_Background_True"))
+                  obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F5_Function_Background_True"))
               end
           end
           obs.obs_source_release(source)     
@@ -1141,7 +1193,7 @@ function toggle_display_disable(pressed)  -- F5 Hotkey to permanently remove ove
           if source ~= nil then
               obs.obs_source_set_enabled(source, false)
               if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F5_Function_Background_True"))
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F5_Function_Background_True"))
               end
           end
           obs.obs_source_release(source)  
@@ -1149,7 +1201,7 @@ function toggle_display_disable(pressed)  -- F5 Hotkey to permanently remove ove
           if source ~= nil then
               obs.obs_source_set_enabled(source, true)
               if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "F5_Function_Background_False"))
+                  obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F5_Function_Background_False"))
               end
           end
           obs.obs_source_release(source)    
@@ -1175,7 +1227,7 @@ function toggle_disable_of_autohide(pressed)  -- F8 Hotkey to toggle autohide di
           if source ~= nil then
               obs.obs_source_set_enabled(source, false)
               if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F8_Function_Background_False"))
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F8_Function_Background_False"))
               end
           end
           obs.obs_source_release(source)  
@@ -1183,7 +1235,7 @@ function toggle_disable_of_autohide(pressed)  -- F8 Hotkey to toggle autohide di
           if source ~= nil then
               obs.obs_source_set_enabled(source, true)
               if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "F8_Function_Background_True"))
+                  obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F8_Function_Background_True"))
               end
           end
           obs.obs_source_release(source)   
@@ -1201,7 +1253,7 @@ function toggle_disable_of_autohide(pressed)  -- F8 Hotkey to toggle autohide di
           if source ~= nil then
               obs.obs_source_set_enabled(source, false)
               if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F8_Function_Background_True"))
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F8_Function_Background_True"))
               end
           end
           obs.obs_source_release(source)  
@@ -1209,7 +1261,7 @@ function toggle_disable_of_autohide(pressed)  -- F8 Hotkey to toggle autohide di
           if source ~= nil then
               obs.obs_source_set_enabled(source, true)
               if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "F8_Function_Background_False"))
+                  obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F8_Function_Background_False"))
               end
           end
           obs.obs_source_release(source)    
@@ -1223,7 +1275,7 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
     end
     if eventB then
         eventB = false
-        local source = obs.obs_get_source_by_name("A_B") -- Event type: Individual
+        local source = obs.obs_get_source_by_name("A_B")  -- Event A
         if source ~= nil then
             local settings = obs.obs_data_create()
             obs.obs_data_set_string(settings, "text", "Event A Shown")
@@ -1235,7 +1287,7 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
         if source ~= nil then
             obs.obs_source_set_enabled(source, false)
             if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F10_Function_Background_False"))
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F10_Function_Background_False"))
             end
         end
         obs.obs_source_release(source)  
@@ -1243,7 +1295,7 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
         if source ~= nil then
             obs.obs_source_set_enabled(source, true)
             if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "F10_Function_Background_True"))
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F10_Function_Background_True"))
             end
         end
         obs.obs_source_release(source)     
@@ -1252,7 +1304,7 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
         if synchro then               
             return   -- Event B for Synchro not possible
         end
-        local source = obs.obs_get_source_by_name("A_B") -- Event type: Individual
+        local source = obs.obs_get_source_by_name("A_B") -- Event B
         if source ~= nil then
             local settings = obs.obs_data_create()
             obs.obs_data_set_string(settings, "text", "Event B Shown")
@@ -1264,7 +1316,7 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
         if source ~= nil then
             obs.obs_source_set_enabled(source, false)
             if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Disable_source ): " .. "F10_Function_Background_True"))
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F10_Function_Background_True"))
             end
         end
         obs.obs_source_release(source)  
@@ -1272,7 +1324,7 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
         if source ~= nil then
             obs.obs_source_set_enabled(source, true)
             if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source ): " .. "F10_Function_Background_False"))
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F10_Function_Background_False"))
             end
         end
         obs.obs_source_release(source)   
@@ -1372,6 +1424,9 @@ end  -- tvBanner_remove()
 
 -- process the UDP messages
 local function processMessage(k, v, x)
+    if debug then
+        obs.script_log(obs.LOG_INFO, string.format("processMessage()"))
+    end    
     if k then -- Is there a first UDP port message present (k)?
         local resultK = {} -- empty array where we will store data from the first UDP data stream
         local delimiter = ("|") -- UDP data string delimiter chr
@@ -1379,16 +1434,25 @@ local function processMessage(k, v, x)
             table.insert(resultK, match)
         end
         if debug then
-           print ('UDP message "' .. resultK[1] .. '" received, length is ' .. #resultK .. ' fields. Last field is: ' .. resultK[#resultK])  
+           print ('UDP message: "' .. resultK[1] .. '" received, length is ' .. #resultK .. ' fields. Last field is: ' .. resultK[#resultK]) 
         end 
         --  resultK generated array with entries from the UDP data packet             
         if resultK[#resultK] ~= nil then -- check if empty field at end
             resultK[#resultK] = string.sub(resultK[#resultK], 1, -2) -- CR present at end of data packet so remove from the last field else Lua gets upset when trying to displaying the last field
         end 
-
-        if resultK[1] == "REFEREE" then         
-            update(resultK)  -- Process the 'REFEREE' message
-        end 
+        if eventB then
+            if resultK[1] == "REFEREE" and resultK[2] == "b" then  
+                synchro = false     
+                update(resultK)  -- process the 'REFEREE' message for event B 
+            end
+        elseif resultK[1] == "REFEREE" and resultK[2] == "a" then
+            if resultK[47] == "True" then
+                synchro = true  -- synchro event
+            else 
+                synchro = false
+            end
+            update(resultK)  -- prosess the 'REFEREE' message for event A
+        end
         if resultK[1] == "AVIDEO" then
             -- Do nothing at this time
         end
@@ -1432,13 +1496,12 @@ local function processMessage(k, v, x)
         end  
     end
     --]]
-
-end     -- end processMessage()
+end    -- end processMessage()
 
 
 function UDPtimer_callback() 
         -- Get UDP data until there is no more, or an error occurs
-        -- if the lua script has reloaded then stop any old timers and return
+        -- if the lua script has reloaded then stop any old timers and return    
     if id < activeId then
         obs.remove_current_callback()
         return
@@ -1459,10 +1522,11 @@ function UDPtimer_callback()
                 if source ~= nil then
                     obs.obs_source_set_enabled(source, true)
                 end
-                obs.obs_source_release(source)         
-                print("dataClient: " .. dataClient)
+                obs.obs_source_release(source) 
+                if debug then       
+                    print("dataClient: " .. dataClient)
+                end
                 processMessage(dataClient, '', '')  -- allow for receiving messages from three ports!
-               -- update(dataClient)
                 local source = obs.obs_get_source_by_name("Event_Complete") -- disable blue status rectangle on 'Status' source dock
                     if source ~= nil then
                         obs.obs_source_set_enabled(source, false)
@@ -1507,7 +1571,7 @@ function UDPtimer_callback()
         end
     until dataAwards == nil
 --]]    
-end
+end  -- end UDPtimer_callback()
 
 
 function init()
