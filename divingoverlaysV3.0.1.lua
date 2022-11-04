@@ -1728,8 +1728,8 @@ end
 
 -- The function named "script_save" will be called when the script is saved
 -- NOTE: This function is usually used for saving extra data (such as a hotkey's settings).  Settings set via the 'properties' function are saved automatically.
-function script_save(settings)
- -- for k, v in pairs(hk) do
+function script_save(settings)  -- I think it works better starting from default settings.
+ -- for k, v in pairs(hk) do   --  Saving current HotKey settings
  --   a = obs.obs_hotkey_save(hk[k])
  --   obs.obs_data_set_array(settings, k, a)
  --   obs.obs_data_array_release(a)
