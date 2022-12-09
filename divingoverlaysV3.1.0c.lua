@@ -16,13 +16,19 @@
 **  Provides a number of OBS-Studio Text(GDI+) Sources which displays the event information from DiveRecorder (DR) onto the event video stream.  Uses the UDP data provided by DR on the local network
 **  and after checking displays the new information.   Has the capability to automatically hide the dive information banner and re-display it when DR data changes.  Works for both Individual events
 **  and Synchro events and a vairable number of judges.  Will work for simultanious events but only display the data for one of the simultanious events (A or B).  Does not work for a skills circuit!
-**  UDP script components by OBS Forum's John Hartman, with thanks. 
+**  Initial UDP script components by OBS Forum's John Hartman, with thanks. 
 **
 **    V3.0.0a  2022-07-05  A developement branch from V2.1.2 to implement UDP communications.  Don't use, unlikly to be working!!
 **    V3.0.0b  2022-10-25  Further deveopement on the use of UDP for communications.  Mainly rationalisation of the code and removal of file monitoring code.  Don't use, unlikly to be fully working!!
 **    V3.0.0c  2022-10-28  Working version using UDP communications from DR.  Penalty description now included in awards overlay as approporate.  Auto selection between Individual or Synchro events.
-**    V3.0.1   2022-11-02  Working version. However still issues with initilisation of the HotKeys. Best if user cycles each function key after the start of OBS.  Test of two UDP port monitoring.
-**    V3.1.0a  2022-11-05  Using UDP to determine how many judges are being used.  Synchro 5 judge and 7 judge included.  Source updated for 5 and 7 synchro judges.
+**    V3.0.1   2022-11-02  Working version. However still issues with initilisation of the HotKeys. Best if user cycles each function key after the start of OBS.  Test of using two UDP ports.
+**    V3.1.0a  2022-11-05  Using UDP to determine how many judges are being used (and displayed in Status).  Synchro 5 judge and 7 judge option now included.  Source JSON file updated for 5 and 7
+**                         synchro judges.
+**    V3.1.0b  2022-11-12  A test version to investigate the anomilies when running a skills circuit.
+**    V3.1.0c  2022-11-22  Update to fix minor issues with layout and the non display of end of event status indicator.  For Plaform events, board height added after dive description. Source JSON 
+**                         updated for new concept of Total and Marks source rather then just one called Scores
+**    V                          
+**    
 **  
 **        Packet ID (58091 REFEREE) split_string2[1]          Packet ID (58091 UPDATE)                     Packet ID (58091 AVIDEO)            Packet ID (58092 DBSERVER)        Packet ID (58092 HELLO)
 **        a or b event              split_string2[2]          a or b event                                 a or b event                        (No end of message!)              DiveRecorder hostname
@@ -98,7 +104,7 @@
 **        Seconds per dive          split_string2[72]
 **        Do Not Rank flag          split_string2[73]
 **        Team event                split_string2[74]
-**        eom  (^)                  split_string2[75]
+**        eom (^, 94 dec , 5E hex)  split_string2[75]
 ]]
 
 local obs = obslua
@@ -133,7 +139,7 @@ local tvBanner_removed = false -- is or is not the banner being displayed?
 local fileContentsChanged = true  -- has the data file changed since the last update flag?   -- And again not needed for UDP comms
 local hideDisable = false  -- default is to hide overlays after timeout
 
-htk_1 = obs.OBS_INVALID_HOTKEY_ID  -- seems to work just as well without these declarations but all on-line inf says to do this so go for it!
+htk_1 = obs.OBS_INVALID_HOTKEY_ID  -- seems to work just as well without these declarations but all on-line info says to do this so go for it!
 htk_2 = obs.OBS_INVALID_HOTKEY_ID
 htk_3 = obs.OBS_INVALID_HOTKEY_ID
 htk_4 = obs.OBS_INVALID_HOTKEY_ID
@@ -157,7 +163,7 @@ local plugin_def = {
     output_flags = bit.bor(obs.OBS_SOURCE_CUSTOM_DRAW),
 }
 
--- called when an update to the DR text file is detected.  Process DR data in the file then display and for a user determined period if Overlay hide option not disabled.
+-- called when a valid UDP message is detected.  Process DR data in the message then display and for a user determined period if Overlay hide option not disabled.
 local function update(v)
     obs.script_log(obs.LOG_INFO, string.format("start update(). Headder: " .. v[1]))    -- show in log what is happening
     if debug then
@@ -173,8 +179,7 @@ local function update(v)
     end
     split_string2 = v
 
-    -- now we are processing a message, update the OBS Status display for Synchro (F9) with current settings. This is in case this is a Synchro event and the user has not 
-    -- set this because the script will!
+    -- now we are processing a message, update the OBS Status display for Synchro (F9) with current settings. This is in case this is a Synchro event!
     if synchro then
         local source = obs.obs_get_source_by_name("Event_Type") -- Event type: Synchro
         if source ~= nil then
@@ -226,10 +231,10 @@ local function update(v)
         end
         obs.obs_source_release(source)     
      end    -- end status update
-    local source = obs.obs_get_source_by_name("NoJudges") -- Display no of judges in courner of F9 Status box
+    local source = obs.obs_get_source_by_name("NoJudges") -- Display no of judges in corner of F9 Status box
     if source ~= nil then
         local settings = obs.obs_data_create()
-        obs.obs_data_set_string(settings, "text", split_string2[50])
+        obs.obs_data_set_string(settings, "text", ("No Judges: " .. split_string2[50]))
         obs.obs_source_update(source, settings)
         obs.obs_data_release(settings)
         obs.obs_source_release(source)
@@ -255,15 +260,16 @@ local function update(v)
             obs.script_log(obs.LOG_INFO, string.format("Enable_source at start of update(): " .. event))
         end
     end
-    obs.obs_source_release(source)
+    obs.obs_source_release(source)  
+    -- end of Status display update
 
     -- first generate empty text display lines
     lineOne = ("                                                  ") -- set overlay display text line 1 to 50 spaces
     lineTwo = ("                                                  ") -- set overlay display text line 2 to 50 spaces
     tvBanner_removed = false -- as we are about to display dive data or awards!
 
-    -- generate country flag or club logo file info from udp data.  This is a local flag file not from a website as outlined above in notes
-    local flag_file = "C:\\Users\\The Trust\\Documents\\OBS\\flags\\" .. split_string2[56].. ".png"  -- temp solution
+    -- generate country flag or club logo file info from udp data.
+    local flag_file = "C:\\Users\\%USERNAME%\\Documents\\OBS\\flags\\" .. split_string2[56].. ".png"  -- temp solution, need to use the date the user enters!
     if debug then
         obs.script_log(obs.LOG_INFO, string.format("Flag File = " .. flag_file))
     end
@@ -275,7 +281,6 @@ local function update(v)
     else
         ft:close()
     end
-
     -- Divers country flag or club logo insert into source overlay.
     local source = obs.obs_get_source_by_name("Flag") 
     if source ~= nil then
@@ -285,8 +290,9 @@ local function update(v)
         obs.obs_data_release(settings)
         obs.obs_source_release(source)
     end
+    -- end of flag display process
 
-    -- now produce the event information display
+    -- produce the event information display
     local event_info = (" " .. split_string2[60] .. " \n Diver " .. split_string2[8] .. "/" .. split_string2[64] .. "  Round " .. split_string2[6] .. "/" .. split_string2[63] .. " ")
     local source = obs.obs_get_source_by_name("EventData") -- Display event data
     if source ~= nil then
@@ -297,7 +303,7 @@ local function update(v)
         obs.obs_source_release(source)
     end
 
-    -- new generate the Penalty text, if there is one
+    -- generate the Penalty text, if there is one
     if     split_string2[51] == "0" then penalty = (" ")
     elseif split_string2[51] == "1" then penalty = ("   Failed Dive ")
     elseif split_string2[51] == "2" then penalty = ("    Restarted \n    -2 points ")
@@ -305,7 +311,7 @@ local function update(v)
     elseif split_string2[51] == "4" then penalty = ("  Arm position \n  Max 4½ points ")
     end 
 
-    -- now generate the rest of the displays                 
+    -- generate the main displays; diver & awards, etc                 
     if synchro then --  >>>> *** If a Synchro event then ... *** <<<<<
         -- now generate lineone of the overlay, the Divers, preceded by rank
         display1a = (" " .. split_string2[32] .. " ")
@@ -324,15 +330,6 @@ local function update(v)
                 end
             end
             obs.obs_source_release(source)
-
-            -- if split_string2[50] == 11 then
-            -- end
-            -- elseif split_string2[50] == 9 then
-            -- end
-            -- elseif split_string2[50] == 7 then
-            -- end
-            -- elseif split_string2[50] == 5 then
-            -- end
 
             if split_string2[50] == "11" then -- 11 synchro judges (Judge role labels are in different positions for other no of judges!)
                 if debug then
@@ -844,9 +841,11 @@ local function update(v)
             else 
                 error("Invalid number of synchro judges")
             end
-            if split_string2[8] == split_string2[65] and split_string2[6] == split_string2[64] then
+
+            --  Event Complete?
+            if split_string2[8] == split_string2[64] and split_string2[6] == split_string2[63] then
                 eventComplete = true
-                local source = obs.obs_get_source_by_name("Event_Complete") -- show blue dot
+                local source = obs.obs_get_source_by_name("Event_Complete") -- show blue status rectangle in 'Status' source dock
                 if source ~= nil then
                     obs.obs_source_set_enabled(source, true)
                 end
@@ -854,6 +853,13 @@ local function update(v)
                 if debug then
                     obs.script_log(obs.LOG_INFO, string.format("Synchro Event Complete!"))
                 end
+            else
+                eventComplete = false
+                local source = obs.obs_get_source_by_name("Event_Complete") -- disable blue status rectangle in 'Status' source dock
+                if source ~= nil then
+                    obs.obs_source_set_enabled(source, false)
+                end
+                obs.obs_source_release(source) 
             end
             scores2 = split_string2[30]  -- no data to put in this source as no awards
          
@@ -916,7 +922,12 @@ local function update(v)
             elseif split_string2[14] == "C" then position = (", tucked")
             elseif split_string2[14] == "D" then position = (", free position")
             end
-            sourcelineTwo = (split_string2[61] .. position)      -- dive description + position    
+
+            if split_string2[16] == "5" or split_string2[16] == "7.5" or split_string2[16] == "10" then board = (" " .. split_string2[16] .. "m")
+            else board = (" ")
+            end
+
+            sourcelineTwo = (split_string2[61] .. position .. board)      -- dive description + position    
             display2b = "!"
             display2a = "!"
             lineTwo = string.insert(lineTwo, sourcelineTwo, 0)
@@ -926,14 +937,15 @@ local function update(v)
 
 --  >>>>> Individual event <<<<<<
     else            --  >>>> *** As NOT a Synchro event assume only 5 or 7 judges for individual events, rest of J fields must be 'blank'.  Use awards line blank space for BannerLine2 data  *** <<<<
-        -- now generate lineone of the overlay, the Divers information, preceded by rank
+        
+        -- generate lineone of the overlay, the Divers information, preceded by rank
         display1a = (" " .. split_string2[32] .. " ")
         lineOne = string.insert(lineOne, display1a, 0)
         displayName = (split_string2[9]) -- display name and club
         lineOne = string.insert(lineOne, displayName, 5)
         display1b = (" ")  
         scores1 = split_string2[29]
-        if split_string2[25] ~= (" ") then -- then nothing in J9 award position so assume individual event and disable the 9 & 11 synchro judge role labels
+        if split_string2[25] ~= (" ") then -- then nothing in J9 award position so assume individual event and disable the 9 & 11 synchro judge role labels  -- need to change to use UDP data with no of judges
                                            -- should not have got to this point if Synchro but no harm in checking the awards to confirm!
             local source = obs.obs_get_source_by_name("SynchroJLabels11") -- disable synchro11 judge role labels
             if source ~= nil then
@@ -968,7 +980,7 @@ local function update(v)
             end
             obs.obs_source_release(source)
         end
-        if split_string2[17] ~= (" ") then -- if award in J1 position then display judge awards
+        if split_string2[17] ~= (" ") then -- if award in J1 position then display judge awards  -- is there a better way of doing this now we have UDP data?
             sourcelineTwo = (" ") -- empty sourcelineTwo field to ensure debug works correctly
             local source = obs.obs_get_source_by_name("JudgeAwards") -- Enable awards Text Source group (else 11 individual text boxes sources to enable!)
             if source ~= nil then
@@ -1067,9 +1079,11 @@ local function update(v)
                 obs.obs_data_release(settings)
                 obs.obs_source_release(source)
             end
-            if split_string2[8] == split_string2[65] and split_string2[6] == split_string2[64] then
+
+            -- Event Complete ??
+            if split_string2[8] == split_string2[64] and split_string2[6] == split_string2[63] then
                 eventComplete = true
-                local source = obs.obs_get_source_by_name("Event_Complete") -- enable blue dot
+                local source = obs.obs_get_source_by_name("Event_Complete") -- enable blue status rectangle
                 if source ~= nil then
                     obs.obs_source_set_enabled(source, true)
                 end
@@ -1077,6 +1091,13 @@ local function update(v)
                 if debug then
                     obs.script_log(obs.LOG_INFO, string.format("Individual Event Complete!"))
                 end
+            else
+                eventComplete = false
+                local source = obs.obs_get_source_by_name("Event_Complete") -- disable blue status rectangle in 'Status' source dock
+                if source ~= nil then
+                    obs.obs_source_set_enabled(source, false)
+                end
+                obs.obs_source_release(source) 
             end
             
             scores2 = split_string2[30]
@@ -1087,7 +1108,7 @@ local function update(v)
             end
             -- lineTwo = string.insert(lineTwo, display2b, 32) -- insert at the end of lineTwo, first part of lineTwo is the awards, but awards are not inserted into this Text Source!
 
-        else  --    >>>>  *  Individual event before judge awards so display dive description and ranking on line two
+        else  --    >>>>  *  Individual event before judge awards so display dive description and ranking on line two  -- don't display ranking on line two do we???  Is at the start of line one??
             local source = obs.obs_get_source_by_name("JudgeAwards") -- Disable judge awards text Source Group
             if source ~= nil then
                 obs.obs_source_set_enabled(source, false)
@@ -1121,7 +1142,12 @@ local function update(v)
             elseif split_string2[14] == "C" then position = (", tucked")
             elseif split_string2[14] == "D" then position = (", free position")
             end
-            sourcelineTwo = (split_string2[61] .. position)
+
+            if split_string2[16] == "5" or split_string2[16] == "7.5" or split_string2[16] == "10" then board = (" " .. split_string2[16] .. "m")
+            else board = (" ")
+            end
+
+            sourcelineTwo = (split_string2[61] .. position .. board)
             lineTwo = string.insert(lineTwo, sourcelineTwo, 0) -- Insert dive description at the start of lineTwo
             obs.timer_add( function() remove_TVbanner() end,  dinterval )   -- hide overlay after timer period            
         end
@@ -1144,7 +1170,6 @@ local function update(v)
         obs.obs_data_release(settings)
         obs.obs_source_release(source)
     end
-
     local source = obs.obs_get_source_by_name("Linetwo") -- Overlay LineTwo text source insert
     if source ~= nil then
         local settings = obs.obs_data_create()
@@ -1153,17 +1178,21 @@ local function update(v)
         obs.obs_data_release(settings)
         obs.obs_source_release(source)
     end
-    
-    scores = (scores1 .. "\n" .. scores2 )
-    local source = obs.obs_get_source_by_name("Scores") -- Overlay LineTwo text source insert
+    local source = obs.obs_get_source_by_name("Total") -- Overlay Total text source insert
     if source ~= nil then
         local settings = obs.obs_data_create()
-        obs.obs_data_set_string(settings, "text", scores)
+        obs.obs_data_set_string(settings, "text", scores1)
         obs.obs_source_update(source, settings)
         obs.obs_data_release(settings)
         obs.obs_source_release(source)
-    end
-        
+    end 
+    local source = obs.obs_get_source_by_name("Marks") -- Overlay Marks text source insert
+    if source ~= nil then
+        local settings = obs.obs_data_create()
+        obs.obs_data_set_string(settings, "text", scores2)
+        obs.obs_source_update(source, settings)
+        obs.obs_data_release(settings)
+        obs.obs_source_release(source)
     local source = obs.obs_get_source_by_name("Penalty") -- Overlay Penalty text source insert
     if source ~= nil then
         local settings = obs.obs_data_create()
@@ -1172,7 +1201,7 @@ local function update(v)
         obs.obs_data_release(settings)
         obs.obs_source_release(source)
     end
-end -- update(k, v)
+end -- update(v)
 
 
 -- String insert function.  Keeps original string length; well almost! First position is 0, not 1 as per usual with Lua.  So use 0 for the position variable if 
@@ -1183,7 +1212,7 @@ function string.insert(str1, str2, pos)
     local lenstr1 = string.len(str1)
     local lenstr2 = string.len(str2)
     if (lenstr2 + pos) > lenstr1 then
-        print("Function String.Insert length overrun by: " .. ((lenstr2+pos)-lenstr1) .. ", str1: " .. str1 .. " str2: " .. str2)
+        print("Fcn String.Insert length overrun by: " .. ((lenstr2+pos)-lenstr1) .. ", str1: " .. str1 .. "  str2: " .. str2)
     end
     return str1:sub(1, pos) .. str2 .. str1:sub(pos + (1 + lenstr2))
 end -- string.insert()
@@ -1441,8 +1470,8 @@ function disableUpdate_overlays(pressed)  --  F3 Hotkey to disable overlays upda
 end  -- disableUpdate_overlays()
 
 
-function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-start script
-    -- Hotkey to toggle between the two event types
+function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-start script ***NOW NOT NEEDED BUT LEFT IN SCRIPT WITH SLIGHT SOURCE MODIFICATION TO REMOVE THE 'F9' LABEL**
+    -- Hotkey to toggle between the two event types  *No of judges displayed in the F9 status source is not generated here*
     if not pressed then
      return
     end
@@ -1691,10 +1720,10 @@ function toggle_event_a_or_b(pressed)  -- F10 Hotkey to toggle Event A or Event 
 end -- toggle_event_a_or_b()  
 
 
-function remove_TVbanner()
+function remove_TVbanner()  -- this removes the banner under timer control
     obs.script_log(obs.LOG_INFO, string.format("start removeTVBanner()"))  
-    -- remove the TV Banner from the screen if not 'hideDisable' and after a user configurable period of time.  If last dive then remove
-    -- banner after time period anyway even if 'hideDisable' set.
+    -- remove the TV Banner from the screen if not 'hideDisable' and after a user configurable period of time.  
+    -- If last dive then remove banner after time period anyway even if 'hideDisable' set.  ***Does not work***
     if debug then
         obs.script_log(obs.LOG_INFO, string.format("tvBanner_removed: %s", tvBanner_removed))    
         obs.script_log(obs.LOG_INFO, string.format("hideDisable: %s", hideDisable))
@@ -1709,7 +1738,7 @@ function remove_TVbanner()
         return
     end
     --[[
-    else  -- leftover from auto banner remove at the end of the event.  Not reliable and when Recorders display Results banner re-displays!!
+    else  -- leftover from auto banner remove at the end of the event.  Not reliable and when the Recorders display Results or Rankings the banner re-displays!!  What UDP data can drive this?
         if tvBanner_removed then
             obs.remove_current_callback()
             return
@@ -1739,7 +1768,7 @@ function remove_TVbanner()
 end --remove_TVbanner()
 
 
-function tvBanner_remove()
+function tvBanner_remove()  -- this calls the timer, timer_remove, to remove the banner using function remove_TVbanner()
     obs.script_log(obs.LOG_INFO, string.format("start tvBanner_remove()"))  
 
     local source = obs.obs_get_source_by_name("TVBanner2") -- disable text Source (TVBanner group)
@@ -1797,7 +1826,7 @@ end  -- tvBanner_remove()
 
 
 -- process the UDP messages
-local function processMessage(k, v, x)
+local function processMessage(k, v, x, y)
     if debug then
         obs.script_log(obs.LOG_INFO, string.format("processMessage()"))
     end    
@@ -1868,10 +1897,29 @@ local function processMessage(k, v, x)
             resultX[#resultX] = string.sub(resultX[#resultX], 1, -2) -- CR present at end of data packet so remove from the last field else Lua gets upset when trying to displaying the last field
         end 
 
-        if resultX[1] == "REFEREE" then         
-            update(resultX)  -- Process the 'REFEREE' message
+        if resultX[1] == "?????" then         
+            update(resultX)  -- Process the '?????' message
         end  
     end
+
+    if y then -- Is there a fourth UDP port message present (y)?
+        local resultY = {} -- empty array where we will store data from the UDP data stream
+        local delimiter = ("|") -- UDP data string delimiter chr
+        for match in (y .. delimiter):gmatch("(.-)" .. delimiter) do -- fill the array
+            table.insert(resultY, match)
+        end
+        if debug then
+           print ('UDP message "' .. resultY[1] .. '" received, length is ' .. #resultY .. ' fields. Last field is: ' .. resultY[#resultY])  
+        end
+        --  resultY generated array with entries from the UDP data packet
+        if resultY[#resultY] ~= nil then -- check if empty field at end
+            resultY[#resultY] = string.sub(resultY[#resultY], 1, -2) -- CR present at end of data packet so remove from the last field else Lua gets upset when trying to displaying the last field
+        end 
+
+        if resultY[1] == "!!!!!!" then         
+            update(resultY)  -- Process the '!!!!!!' message
+        end  
+    end    
     --]]
 end    -- end processMessage()
 
@@ -1883,7 +1931,7 @@ function UDPtimer_callback()
         obs.remove_current_callback()
         return
     end   
-    local source = obs.obs_get_source_by_name("Update_File_Detected") -- disable text Source (UpdateFileDetected)
+    local source = obs.obs_get_source_by_name("Update_File_Detected") -- disable status Source (UpdateFileDetected)
     if source ~= nil then
         obs.obs_source_set_enabled(source, false)
     end
@@ -1895,7 +1943,7 @@ function UDPtimer_callback()
                 currentDataClient = dataClient
                 fileContentsChanged = true
                 eventComplete = false                
-                local source = obs.obs_get_source_by_name("Update_File_Detected") -- enable text Source (UpdateFileDetected)
+                local source = obs.obs_get_source_by_name("Update_File_Detected") -- enable status Source (UpdateFileDetected)
                 if source ~= nil then
                     obs.obs_source_set_enabled(source, true)
                 end
@@ -1903,12 +1951,12 @@ function UDPtimer_callback()
                 if debug then       
                     print("dataClient: " .. dataClient)
                 end
-                processMessage(dataClient, '', '')  -- allow for receiving messages from three ports!
-                local source = obs.obs_get_source_by_name("Event_Complete") -- disable blue status rectangle on 'Status' source dock
-                    if source ~= nil then
-                        obs.obs_source_set_enabled(source, false)
-                    end
-                    obs.obs_source_release(source) 
+                processMessage(dataClient, '', '', '')  -- allow for receiving messages from four ports!
+--                local source = obs.obs_get_source_by_name("Event_Complete") -- disable blue status rectangle on 'Status' source dock
+--                    if source ~= nil then
+--                        obs.obs_source_set_enabled(source, false)
+--                    end
+--                    obs.obs_source_release(source) 
             else 
                 fileContentsChanged = false                    
             end         
@@ -1970,6 +2018,16 @@ function init()
 
     -- ensure nothing displayed on startup or function change
     tvBanner_remove()
+
+-- Lua test area.  Code here has very little if anything to do with actually providing the overlays!
+
+--    local x = io.popen("cd"):read()   -- 
+--    print(x)
+ --   print(string.format("OS Path: "  .. x))
+ --   print(io.popen("ls").__gc)
+
+--]]
+
 
 end -- init()
 
@@ -2065,8 +2123,8 @@ end
 
 -- The function named "script_update" will be called when settings are changed by the user
 function script_update(settings)
-    flagLoc = obs.obs_data_get_string(settings, "flagLoc") -- Flag file path
-    flagExt = obs.obs_data_get_string(settings, "flagExt") -- Flag file extension 
+    flagLoc = obs.obs_data_get_string(settings, "flagLoc") -- Flag file path     *****NOT USED at present
+    flagExt = obs.obs_data_get_string(settings, "flagExt") -- Flag file extension   *****NOT USED at present
     dinterval = obs.obs_data_get_int(settings, "dinterval") -- Overlay display period
     debug = obs.obs_data_get_bool(settings, "debug") -- Set debug on or off
 
@@ -2083,7 +2141,7 @@ end
 -- The function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data as a Video Overlay</h></center>
-             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  The approporate OBS Source (.json) file must be imported into OBS for this video overlay to function correctly. You must be connected to the same Class C sub-net as the DR computers. </p><p>Andy - V3.1.0 2022Nov05</p>]]
+             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  The approporate OBS Source (.json) file must be imported into OBS for this video overlay to function correctly. You must be connected to the same Class C sub-net as the DR computers. </p><p>Andy - V3.1.0 2023Nov21</p>]]
 end
 
 -- The function named script_properties defines the properties that the user can change for the entire script module itself

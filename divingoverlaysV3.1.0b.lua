@@ -22,7 +22,9 @@
 **    V3.0.0b  2022-10-25  Further deveopement on the use of UDP for communications.  Mainly rationalisation of the code and removal of file monitoring code.  Don't use, unlikly to be fully working!!
 **    V3.0.0c  2022-10-28  Working version using UDP communications from DR.  Penalty description now included in awards overlay as approporate.  Auto selection between Individual or Synchro events.
 **    V3.0.1   2022-11-02  Working version. However still issues with initilisation of the HotKeys. Best if user cycles each function key after the start of OBS.  Test of two UDP port monitoring.
-**    V3.1.0a  2022-11-05  Using UDP to determine how many judges are being used.  Synchro 5 judge and 7 judge included.  Source updated for 5 and 7 synchro judges.
+**    V3.1.0a  2022-11-05  Using UDP to determine how many judges are being used (and displayed in Status).  Synchro 5 judge and 7 judge option now included.  Source JSON file updated for 5 and 7
+**                         synchro judges.
+**    V3.1.0.b 2022-11-12  Test version
 **  
 **        Packet ID (58091 REFEREE) split_string2[1]          Packet ID (58091 UPDATE)                     Packet ID (58091 AVIDEO)            Packet ID (58092 DBSERVER)        Packet ID (58092 HELLO)
 **        a or b event              split_string2[2]          a or b event                                 a or b event                        (No end of message!)              DiveRecorder hostname
@@ -98,7 +100,7 @@
 **        Seconds per dive          split_string2[72]
 **        Do Not Rank flag          split_string2[73]
 **        Team event                split_string2[74]
-**        eom  (^)                  split_string2[75]
+**        eom (^, 94 dec , 5E hex)  split_string2[75]
 ]]
 
 local obs = obslua
@@ -226,10 +228,10 @@ local function update(v)
         end
         obs.obs_source_release(source)     
      end    -- end status update
-    local source = obs.obs_get_source_by_name("NoJudges") -- Display no of judges in courner of F9 Status box
+    local source = obs.obs_get_source_by_name("NoJudges") -- Display no of judges in corner of F9 Status box
     if source ~= nil then
         local settings = obs.obs_data_create()
-        obs.obs_data_set_string(settings, "text", split_string2[50])
+        obs.obs_data_set_string(settings, "text", ("No Judges: " .. split_string2[50]))
         obs.obs_source_update(source, settings)
         obs.obs_data_release(settings)
         obs.obs_source_release(source)
@@ -2083,7 +2085,7 @@ end
 -- The function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data as a Video Overlay</h></center>
-             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  The approporate OBS Source (.json) file must be imported into OBS for this video overlay to function correctly. You must be connected to the same Class C sub-net as the DR computers. </p><p>Andy - V3.1.0 2022Nov05</p>]]
+             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  The approporate OBS Source (.json) file must be imported into OBS for this video overlay to function correctly. You must be connected to the same Class C sub-net as the DR computers. </p><p>Andy - V3.1.0 2022Nov12</p>]]
 end
 
 -- The function named script_properties defines the properties that the user can change for the entire script module itself

@@ -26,7 +26,7 @@
 **                         synchro judges.
 **    V3.1.0b  2022-11-12  A test version to investigate the anomilies when running a skills circuit.
 **    V3.1.0c  2022-11-22  Update to fix minor issues with layout and the non display of end of event status indicator.  For Plaform events, board height added after dive description. Source JSON 
-**                         updated for new concept of Total and Marks source rather then just one called Scores
+**                         updated for new concept of Total and Marks Source rather then just one called Scores
 **    V3.1.0d  2022-11-22  Connecting to all four UDP ports but only processing messages from two and using messages from one (at this time)!                          
 **    
 **  
@@ -2170,7 +2170,7 @@ end
 -- The function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data as a Video Overlay</h></center>
-             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  The approporate OBS Source (.json) file must be imported into OBS for this video overlay to function correctly. You must be connected to the same Class C sub-net as the DR computers. </p><p>Andy - V3.1.0 2023Nov21</p>]]
+             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  The approporate OBS Source (.json) file must be imported into OBS for this video overlay to function correctly. You must be connected to the same Class C sub-net as the DR computers. </p><p>Andy - V3.1.0 2023Nov22</p>]]
 end
 
 -- The function named script_properties defines the properties that the user can change for the entire script module itself
