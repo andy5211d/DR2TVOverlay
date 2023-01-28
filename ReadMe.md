@@ -36,25 +36,22 @@ Most user functions can be controlled by hotkeys, as follows:
 
 # Installation 
 These installation notes are for a Windows PC only.  I do not know how a Linux or Mac works and have not tried any of the
-following steps on anything other then a Windows 7, 10 and 11 PC.  It MAY work on other OS's as I know OBS-Studio does.
-However DR2Video will only run under Windows and thus the file mapping would have to use a networked drive into the OBS 
-machine.  
+following steps on anything other then a Windows 7, 10 and 11 PC.  It MAY work on other OS's as I know OBS-Studio does.  
 
 - Download and install two monotype fonts.   The script uses absolute placement for individual data items and if a
 proportional font is used the data may extend out of the 'Overlay' bounds or more likely not line-up with other data.  The 
 two fonts used are 'DejaVu Sans Mono Book' and 'Monofonto Regular'.  Other monotype fonts may work.
 
-- Download and install Exeldro's [Source Dock](https://obsproject.com/forum/resources/source-dock.1317/), [Gradient Source](https://obsproject.com/forum/resources/gradient-source.1172/) and optionally from Palakis [obs-websocket](https://obsproject.com/forum/resources/obs-websocket-remote-control-obs-studio-from-websockets.466/) add-ins to
-OBS-Studio.
+- Download and install Exeldro's [Source Dock](https://obsproject.com/forum/resources/source-dock.1317/), [Gradient Source](https://obsproject.com/forum/resources/gradient-source.1172/) and from Palakis [obs-websocket](https://obsproject.com/forum/resources/obs-websocket-remote-control-obs-studio-from-websockets.466/) add-ins to OBS-Studio.
 
 - Download zip file from (https://github.com//andy5211d/DR2TVOverlay), unpack/unzip.
 
-    Add `divingoverlaysV2.x.x.lua` to OBS Studio via Tools>Scripts > "+" button (script needs to be placed in 
+    Add `divingoverlaysV3.x.x.lua` to OBS Studio via Tools>Scripts > "+" button (script needs to be placed in 
     the C:\Program Files\obs-studio\data\obs-plugins\frontend-tools\scripts folder)
 
     Import 'basic.ini' to OBS-Studio via Profile>Import and select the required .ini file
 
-    Import 'divingoverlays-obssourceV2.json' to OBS Studio via Scene Collection>Import and select the required .json file
+    Import 'divingoverlays-obssourceV3.json' to OBS Studio via Scene Collection>Import and select the required .json file
 
 - Download and install the 'flags' files in the appropriate folder.  Not all the FINA country flags are in the repository
 and thus the user may have to download flag files specific to their event.  I use the club logos for local events in Great
@@ -62,12 +59,12 @@ Britain.  There are numerous flag file sites on the internet and  OBS seems to w
 however the correct file type must be entered into DR2Video file area (see below).  The user will need to change the
 default flag file to one relevant to their event.  The default flag is set to the 'British Diving' logo.
 
-The file location mapping in OBS-Studio DR2TVOverlay script:  (not as shown, now changed to only map the flag files path)
+The file location mapping in OBS-Studio DR2TVOverlay script:  (now not as shown, changed to only map the flag files path)
 ![gif](/gifs/OBSscriptfilelocations.gif)
 
 Errors in file mapping are the usual cause of the divers country flags not being shown.   
 
-Your video settings may be different as will be dependent upon the camera you use and the bandwidth available for the stream
+Your video settings may be different and will be dependent upon the camera you use and the bandwidth available for the stream
 out to the internet and the performance of the computer used for streaming.  These are the settings that seem to work well
 for us in the UK with >8Mbps internet service:  
 
@@ -80,9 +77,12 @@ option, (1080p @ 50PAL).
 
 # Usage
 These operating instructions assume that the user is familiar with Diverecorder and OBS-Studio.  Both programs have lots of
-on-line resources on set-up and operation and thus will not be repeated here.  Diverecorder's DR2Video should be loaded and
-its scoreboard enabled before OBS-Studio will function correctly (as well of course Diverecorder running an event!).  It is
-not important the exact load sequence but I tend to run Diverecorder before starting OBS-Studio.
+on-line resources on set-up and operation and thus will not be repeated here.  It is not important the exact load sequence 
+but I tend to run Diverecorder before starting OBS-Studio.
+
+*** The computer OBS is running on must be on the same Ethernet Class C Sub-net that Diverecorder is connected to ***
+There are no other settings necessary as this OBS script receives the UDP data broadcast by Diverecorder instance or 
+instances.  Event A or Event B should be selected as necessary.
 
 The default start-up of the script has the following settings: (does not seem to be consistent, toggle each after start-up!)
 - Individual Event (F9)
@@ -105,9 +105,8 @@ This overlay can be removed using either Hotkey F1 or F5 dependent upon user pre
 The overlay script will generally follow what the event Recorders are doing in Diverecorder.  Once running there should be
 little to do.
 
-If 'obs-websocket' has been installed in OBS-Studio then it is possible to remotely control OBS using an iPhone or other
-portable device, the functions available remotely dependent upon the app loaded on the portable device.  I'm still 
-experimenting with this capability but OBS Blade seems to work!  
+It is possible to remotely control OBS using an iPhone or other portable device, the functions available remotely dependent
+upon the app loaded on the portable device.  I'm still experimenting with this capability but OBS Blade seems to work!  
 
 ## Screenshots
 
@@ -115,7 +114,7 @@ The DR2TVOverlay OBS script generates two overlay banners, a smallish Event bann
 right dependent upon the use of Hotkey F12.  The Hotkey status Dock shows the current position of the event banner in 
 the F12 icon.  And a larger dive information banner across the bottom which will show the divers name and dive 
 description and then after the judges have entered their awards into DR the divers name and the individual awards, ranking
-and totals.
+and totals and if appropriate any penalty.
 
 For an Individual event the video with a dive description overlay will look something like this:
 ![gif](/gifs/IndividualDescription.gif)
@@ -131,7 +130,7 @@ and when the awards are shown:
 ![gif](/gifs/SynchroAwards.gif)
 
 The script will automatically cater for a differing number of judges with a minimum of 5 for individual events, for
-Synchro events only 9 and 11 judges are supported.  
+Synchro events only 9 and 11 judges are supported (although 7 and 5 may work, not tested).  
 
 # To Do
 Improve the above instructions!  Update the file path mapping picture to the latest single flag file path input.
