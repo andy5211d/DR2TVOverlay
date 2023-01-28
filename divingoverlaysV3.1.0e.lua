@@ -28,7 +28,8 @@
 **    V3.1.0c  2022-11-22  Update to fix minor issues with layout and the non display of end of event status indicator.  For Plaform events, board height added after dive description. Source JSON 
 **                         updated for new concept of Total and Marks Source rather then just one called Scores
 **    V3.1.0d  2022-12-14  Connecting to all four UDP ports but only processing messages from two and using messages from one (at this time)! 
-**    V3.1.0e  2023-01-11  Windows path capture and use no correct.   Only two UDP ports needed at present, 58091 and 58093.  The other two not used.                         
+**    V3.1.0e  2023-01-11  Windows path capture and use now correct.   Only two UDP ports needed at present, 58091 and 58093.  The other two not used. 
+**    V3.1.0   2023-01-28  Version for National Cup testing.  No further changes or updates anticipated.                        
 **    
 **  
 **        Packet ID (58091 REFEREE) split_string2[1]          Packet ID (58091 AVIDEO)
@@ -2180,7 +2181,7 @@ end
 -- The function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data as a Video Overlay</h></center>
-             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  The approporate OBS Source (.json) file must be imported into OBS for this video overlay to function correctly. You must be connected to the same Class C sub-net as the DR computers. </p><p>Andy - V3.1.0 2022Dec14</p>]]
+             <p>Display diver and scores from DiveRecorder for individual and synchro diving events.  The approporate OBS Source (.json) file must be imported into OBS for this video overlay to function correctly. You must be connected to the same Class C sub-net as the DR computers. </p><p>Andy - V3.1.0 2023Jan28</p>]]
 end
 
 -- The function named script_properties defines the properties that the user can change for the entire script module itself
