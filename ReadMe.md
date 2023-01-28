@@ -61,7 +61,7 @@ Britain.  There are numerous flag file sites on the internet and  OBS seems to w
 The user will need to change the default flag file to one relevant to their event.  The default flag is set to the 'British 
 Diving' logo.
 
-The file location mapping in OBS-Studio DR2TVOverlay script:  (now not as shown, only necessary to map the flag files path)
+The file location mapping in OBS-Studio DR2TVOverlay script:
 ![gif](/gifs/OBSscriptfilelocations.gif)
 
 Errors in file mapping are the usual cause of the divers country flags not being shown.   
