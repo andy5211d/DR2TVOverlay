@@ -1,3 +1,5 @@
+NOTE:  Latest version is 'divingoverlaysV3.1.0.lua', not with a letter suffix  
+
 # Description
 DR2TVOverlay is an extension for [OBS Studio](https://obsproject.com/) built on top of its scripting facilities utilising the built-in embedded LuaJIT
 interpreter. This Lua script uses a number of OBS-Studio Sources to display the event information from [DiveRecorder](https://www.diverecorder.co.uk) (DR) onto
@@ -55,11 +57,11 @@ two fonts used are 'DejaVu Sans Mono Book' and 'Monofonto Regular'.  Other monot
 
 - Download and install the 'flags' files in the appropriate folder.  Not all the FINA country flags are in the repository
 and thus the user may have to download flag files specific to their event.  I use the club logos for local events in Great
-Britain.  There are numerous flag file sites on the internet and  OBS seems to work with both .gif and .jpg format files,
-however the correct file type must be entered into DR2Video file area (see below).  The user will need to change the
-default flag file to one relevant to their event.  The default flag is set to the 'British Diving' logo.
+Britain.  There are numerous flag file sites on the internet and  OBS seems to work with both .gif and .jpg format files.
+The user will need to change the default flag file to one relevant to their event.  The default flag is set to the 'British 
+Diving' logo.
 
-The file location mapping in OBS-Studio DR2TVOverlay script:  (now not as shown, changed to only map the flag files path)
+The file location mapping in OBS-Studio DR2TVOverlay script:  (now not as shown, only necessary to map the flag files path)
 ![gif](/gifs/OBSscriptfilelocations.gif)
 
 Errors in file mapping are the usual cause of the divers country flags not being shown.   
@@ -81,6 +83,7 @@ on-line resources on set-up and operation and thus will not be repeated here.  I
 but I tend to run Diverecorder before starting OBS-Studio.
 
 *** The computer OBS is running on must be on the same Ethernet Class C Sub-net that Diverecorder is connected to ***
+
 There are no other settings necessary as this OBS script receives the UDP data broadcast by Diverecorder instance or 
 instances.  Event A or Event B should be selected as necessary.
 
