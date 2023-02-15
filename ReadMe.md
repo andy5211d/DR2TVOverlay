@@ -1,4 +1,3 @@
-NOTE:  Latest version is 'divingoverlaysV3.1.0.lua', not the version with a letter suffix  
 
 # Description
 DR2TVOverlay is an extension for [OBS Studio](https://obsproject.com/) built on top of its scripting facilities utilising the built-in embedded LuaJIT
