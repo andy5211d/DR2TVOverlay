@@ -1422,7 +1422,7 @@ function display_overlays(pressed)  -- F2 HotKey to show the two overlays; but n
 end  -- display_overlays()
 
 
-function disableUpdate_overlays(pressed)  --  F3 Hotkey to re display last update (function name not changed!)
+function redisplay_overlays(pressed)  --  F3 Hotkey to re display last update
     if not pressed then
      return
     end
@@ -1430,63 +1430,9 @@ function disableUpdate_overlays(pressed)  --  F3 Hotkey to re display last updat
     if resultK[1] == "REFEREE" then
        update(resultK)
     end
---[[
-    if disableUpdate then
-        disableUpdate = false
-        local source = obs.obs_get_source_by_name("Screen_Update") 
-        if source ~= nil then
-          local settings = obs.obs_data_create()
-          obs.obs_data_set_string(settings, "text", "Overlays Updated")
-          obs.obs_source_update(source, settings)
-          obs.obs_data_release(settings)
-          obs.obs_source_release(source)
-        end  
-        local source = obs.obs_get_source_by_name("F3_Function_Background_False") -- disable background
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, false)
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F3_Function_Background_False"))
-            end
-        end
-        obs.obs_source_release(source)  
-        local source = obs.obs_get_source_by_name("F3_Function_Background_True") -- enable background
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, true)
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F3_Function_Background_True"))
-            end
-        end
-        obs.obs_source_release(source)   
-    else
-        disableUpdate = true
-        local source = obs.obs_get_source_by_name("Screen_Update") 
-        if source ~= nil then
-          local settings = obs.obs_data_create()
-          obs.obs_data_set_string(settings, "text", "Overlays NOT Updated")
-          obs.obs_source_update(source, settings)
-          obs.obs_data_release(settings)
-          obs.obs_source_release(source)
-        end   
-        local source = obs.obs_get_source_by_name("F3_Function_Background_True") -- disable background
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, false)
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F3_Function_Background_True"))
-            end
-        end
-        obs.obs_source_release(source)  
-        local source = obs.obs_get_source_by_name("F3_Function_Background_False") -- enable background
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, true)
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F3_Function_Background_False"))
-            end
-        end
-        obs.obs_source_release(source)   
-    end
---]]
+
     obs.script_log(obs.LOG_INFO, string.format("F3 Re-display Overlay"))    
-end  -- disableUpdate_overlays()
+end  -- redisplay_overlays()
 
 
 function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-start script ***NOW NOT NEEDED BUT LEFT IN SCRIPT WITH SLIGHT SOURCE MODIFICATION TO REMOVE THE 'F9' LABEL**
@@ -1851,8 +1797,8 @@ local function processMessage(k, v, x, y)
     end    
     if k then -- Is there a first UDP port message present (k)?
 --        local resultK = {} -- empty array where we will store data from the first UDP port data stream
-        count = #resultK
-        for i=0, count do resultK[i] = nil end
+        local count = #resultK
+        for i=0, count do resultK[i] = nil end  -- clear the array
         local delimiter = ("|") -- UDP data string delimiter chr
         for match in (k .. delimiter):gmatch("(.-)" .. delimiter) do -- fill the array
             table.insert(resultK, match)
@@ -2091,7 +2037,7 @@ end -- init()
 hk = {}
 key_1 = '{ "htk_1": [ { "key": "OBS_KEY_F1" } ], '   -- HK to temp remove_overlays
 key_2 = '  "htk_2": [ { "key": "OBS_KEY_F2" } ], '   -- HK to temp display_overlays (all of them)
-key_3 = '  "htk_3": [ { "key": "OBS_KEY_F3" } ], '   -- HK to disableUpdate_overlays   NOW Re-display Overlays but function name kept as was
+key_3 = '  "htk_3": [ { "key": "OBS_KEY_F3" } ], '   -- HK to redisplay_overlays
 key_4 = '  "htk_4": [ { "key": "OBS_KEY_F12" } ], '   -- HK to toggle_event_position
 key_5 = '  "htk_5": [ { "key": "OBS_KEY_F9" } ], '   -- HK to toggle_event_type (synchro or individual)
 key_6 = '  "htk_6": [ { "key": "OBS_KEY_F5" } ], '   -- HK to permanently remove overlays
@@ -2102,7 +2048,7 @@ default_hotkeys =
     {
     {id='htk_1', des='Temporary Remove DR2TVOverlays ',   callback=remove_overlays},
     {id='htk_2', des='Temporary Display All DR2TVOverlays ',  callback=display_overlays},
-    {id='htk_3', des='Re-display Overlays ',  callback=disableUpdate_overlays},  -- callback name not updated
+    {id='htk_3', des='Re-display Overlays ',  callback=redisplay_overlays},
     {id='htk_4', des='Toggle Event Overlay Position ',   callback=toggle_event_position},
     {id='htk_5', des='Toggle Event Type (Synchro or Individual) ',   callback=toggle_event_type},
     {id='htk_6', des='Permanently Remove All Overlays ', callback=toggle_display_disable},
