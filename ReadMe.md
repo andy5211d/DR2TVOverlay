@@ -1,6 +1,5 @@
 # Description
-(The following needs major update now Simultaneous Mode has been implemented.  Function keys below are anticipated, not 
-as is for V3.3.0.)
+(The following needs major update now Simultaneous Mode has been implemented.)
 DR2TVOverlay is an extension for [OBS Studio](https://obsproject.com/) built on top of its scripting facilities utilising the built-in embedded LuaJIT
 interpreter. This Lua script uses a number of OBS-Studio Sources to display the event information from [DiveRecorder](https://www.diverecorder.co.uk) (DR) onto
 the live event video stream.  To use this script the user will need to be reasonably familiar with Diverecorder and OBS-Studio.
@@ -59,7 +58,7 @@ data.  The two fonts used are 'DejaVu Sans Mono Book' and 'Monofonto Regular'.  
 
     Import 'basic.ini' to OBS-Studio via Profile>Import and select the required .ini file
 
-    Import 'divingoverlays-obssourceV3.json' to OBS Studio via Scene Collection>Import and select the required .json file
+    Import 'divingoverlays-obssourceV3.x.x.json' to OBS Studio via Scene Collection>Import and select the required .json file
 
 - Download and install the 'flags' files into an appropriate folder.  Not all the FINA country flags are in this repository
 and thus the user may have to download flag files specific to their event.  I use the club logos for local events in Great
@@ -97,16 +96,18 @@ There are no other settings necessary as this OBS script receives the UDP data b
 instances.  Event A or Event B should be selected as necessary if more than one event is running.  This script does NOT work
 for a skills circuit!
 
-The default start-up of the script has the following settings: (does not seem to be consistent, toggle each after start-up!)
+The default start-up of the script has the following settings: (does not seem to be consistent, toggle each a few times 
+after start-up!)
+- Single Event (F12)
 - Individual Event (F9)
-- Event A (F10)
-- Event Overlay top left (F12)
+- Event A (F6)
+- Event Overlay top left (F10)
 - Auto-hide of overlay enabled (F8)
 - Overlay Update enabled (F3)
 - Overlays Visible (F5)
 
 If the initialisation has gone correctly then the Hotkey status dock will look something like this:
-![gif](/gifs/hotkeystatusdock.gif)
+![gif](/gifs/hotkeystatusdock.gif)  (Now a little differtent)
 
 The user should use the Hotkeys to change the mode of operation as desired.  In most cases F9 and F10 are only needed
 to set-up an event with F1, F3 and F5 used during the event to disable or remove the overlay temporary or permanently
