@@ -109,7 +109,7 @@ after start-up!)
 - Overlays Visible (F5)
 
 If the initialisation has gone correctly then the Hotkey status dock will look something like this:
-![gif](/gifs/hotkeystatusdock.gif)  (Now a little differtent)
+![gif](/gifs/hotkeystatusdock.gif)
 
 The user should use the Hotkeys to change the mode of operation as desired.  In most cases F9 and F10 are only needed
 to set-up an event with F1, F3 and F5 used during the event to disable or remove the overlay temporary or permanently
