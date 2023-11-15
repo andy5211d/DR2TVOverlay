@@ -1,5 +1,7 @@
 # Description
-(The following needs major update now Simultaneous Mode has been implemented.)
+(** The following needs major update now Simultaneous Mode has been implemented.  Diagrams below only show Single event mode
+at present **)
+
 DR2TVOverlay is an extension for [OBS Studio](https://obsproject.com/) built on top of its scripting facilities utilising the built-in embedded LuaJIT
 interpreter. This Lua script uses a number of OBS-Studio Sources to display the event information from [DiveRecorder](https://www.diverecorder.co.uk) (DR) onto
 the live event video stream.  To use this script the user will need to be reasonably familiar with Diverecorder and OBS-Studio.
@@ -26,12 +28,12 @@ Most user functions can be controlled by hotkeys, as follows:
 
     F5 = Permanently remove all overlays
 
-    F8 = Disable auto-hide of overlays.  Not used in Simultaneous Events mode
-
-    F9 = Toggle to display Event A or Event B (there is no Event B option for Synchro). Not used for Simultaneous
+    F6 = Toggle to display Event A or Event B (there is no Event B option for Synchro). Not used for Simultaneous
          Events mode
 
-    F10 = Toggle Event overlay position, top left or top right or for Simultaneous Events mode between Event A o the left
+    F8 = Disable auto-hide of overlays.  Not used in Simultaneous Events mode
+
+    F10 = Toggle Event overlay position, top left or top right or for Simultaneous Events mode between Event A on the left
           and B on the right or Event B on the left and A on the right
 
     F11 = OBS full screen mode (a predefined OBS/Windows hotkey)
