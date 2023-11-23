@@ -24,17 +24,17 @@ Most user functions can be controlled by hotkeys, as follows:
 
     F2 = Temporary show overlays (until next Diverecorder update and the timeout period)
 
-    F3 = Re-display dive information.  Not used in Simultaneous Events mode
+    F3 = Re-display dive information.  In Simultaneous Events mode remove Left Event text
 
     F5 = Permanently remove all overlays
 
-    F6 = Toggle to display Event A or Event B (there is no Event B option for Synchro). Not used for Simultaneous
-         Events mode
+    F6 = Toggle to display Event A or Event B (there is no Event B option for Synchro). In Simultaneous
+         Events mode remove right Event text
 
     F8 = Disable auto-hide of overlays.  Not used in Simultaneous Events mode
 
-    F10 = Toggle Event overlay position, top left or top right or for Simultaneous Events mode between Event A on the left
-          and B on the right or Event B on the left and A on the right
+    F10 = Toggle Event overlay position, top left or top right or for Simultaneous Events mode toggle between Event A on 
+          on the left and B on the right or Event B on the left and A on the right
 
     F11 = OBS full screen mode (a predefined OBS/Windows hotkey)
     
@@ -42,8 +42,8 @@ Most user functions can be controlled by hotkeys, as follows:
 
 # Installation 
 These installation notes are for a Windows PC only.  I do not know how a Linux or Mac works and have not tried any of the
-following steps on anything other than a Windows 7, 10 and 11 PC.  It MAY work on other OS's as I know OBS-Studio does
-(but Diverecorder certainly will not!).  
+following steps on anything other than a Windows 10 and 11 PC.  It MAY work on other OS's as I know OBS-Studio does (but 
+Diverecorder certainly will not!).  
 
 - Download and install two monotype fonts.   The script uses absolute placement for individual data items and if a
 proportional font is used the data may extend out of the 'Overlay' bounds or more likely not line-up with other displayed 
@@ -95,13 +95,13 @@ the DR utilities on the same machine you are running OBS-Studio.
 *** The computer OBS-Studio is running on must be on the same Ethernet Class C Sub-net that Diverecorder is connected to ***
 
 There are no other settings necessary as this OBS script receives the UDP data broadcast by a Diverecorder instance or 
-instances.  Event A or Event B should be selected as necessary if more than one event is running.  This script does NOT work
-for a skills circuit!
+instances.  Event A or Event B should be selected as necessary if more than one event is running or of course simultaneous 
+event mode to display both.  This script does NOT work for a skills circuit!
 
 The default start-up of the script has the following settings: (does not seem to be consistent, toggle each a few times 
 after start-up!)
-- Single Event (F12)
-- Individual Event (F9)
+- Single Event Mode (F12)
+- Individual Event (F9 but now automaticly selected)
 - Event A (F6)
 - Event Overlay top left (F10)
 - Auto-hide of overlay enabled (F8)
@@ -111,7 +111,7 @@ after start-up!)
 If the initialisation has gone correctly then the Hotkey status dock will look something like this:
 ![gif](/gifs/hotkeystatusdock.gif)
 
-The user should use the Hotkeys to change the mode of operation as desired.  In most cases F9 and F10 are only needed
+The user should use the Hotkeys to change the mode of operation as desired.  In most cases F10 is only needed
 to set-up an event with F1, F3 and F5 used during the event to disable or remove the overlay temporary or permanently
 if the event is not going to plan!  
 
@@ -134,7 +134,7 @@ ranking and totals and if appropriate any penalty.  Note: Awards only shown afte
 (As of V3.1.1 may not be exactly as shown below.)  
 
 In Simultaneous Events mode there are two smallish banners at the top of the screen.  One for Event A and the other for
-Event B.  These are switched by the use of Hotkey F12.
+Event B.  These are switched by the use of Hotkey F10.
 
 For an Individual event the video with a dive description overlay will look something like this:
 ![gif](/gifs/IndividualDescription.gif)
