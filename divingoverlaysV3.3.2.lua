@@ -39,7 +39,7 @@
 **    V3.2.2   2023-10-29  Re-factored for single_update and simultaneous_update screen update functions (functions names may change).  Simultaneous or Single mode change uses 'S' as hotkey to move between modes, likly to change though!
 **    V3.3.0   2023-11-08  single_update re-factored to match simultaneous_update format and also both simplified.  Few wrinkles in the display formating but working for both single event and simultaneous events modes.
 **    V3.3.1   2023-11-10  Changed Hotkey assignment to make mode change F12.  Will need the new Source file to match, divingoverlays-obssourceV3.3.1.json 
-**    V3.3.2   2023-11-23  Added capability to swap overlay positions when in Simultaneous mode using the F10 key.  Added F8 and F6 in Simultaneous mode to clear Event A and B respectively
+**    V3.3.2   2023-11-26  Added capability to swap overlay positions when in Simultaneous mode using the F10 key.  Added F8 and F6 in Simultaneous mode to clear Event A and B respectively. Fixed Penalty bug.
 **  
 **        Packet ID (58091 REFEREE) split_string2[1]          Packet ID (58091 AVIDEO)
 **        a or b event              split_string2[2]          a or b event
@@ -1058,7 +1058,7 @@ local function single_update(v)
         end
 
     else  -- no awards so show dive info
-        penalty = (" ")
+        penalty = (" ")   -- ensure last penalty removed
         local source = obs.obs_get_source_by_name("JudgeAwards") -- Disable awards Text Source group
         if source ~= nil then
             obs.obs_source_set_enabled(source, false)
@@ -1308,8 +1308,9 @@ local function simultaneous_update(v)
                 obs.obs_source_release(source)                        
             end
         end
+        ]]
+
     else  -- before awards so display dive data
-]]
         -- generate the first line of the display.   Event, then alternativy the round number or the diver number.   (Don't know how to do this yet!!)
         display1a = (" " .. split_string2[60] .. "  ")                                -- first line: Event info
         display1b = (" Dvr " .. split_string2[8] .. "/" .. split_string2[64] .. " ")    -- first line: diver number of total divers option
@@ -1333,7 +1334,6 @@ local function simultaneous_update(v)
 
         display3a = (split_string2[61] .. position .. board)
         lineThree = string_insert(lineThree, display3a, 0) -- Insert dive description at the start of lineThree
-
 
     end
 
@@ -1408,6 +1408,451 @@ function string_insert(str1, str2, pos)
     return str1:sub(1, pos) .. str2 .. str1:sub(pos + (1 + lenstr2))
 end -- string_insert()
 
+
+function remove_overlays(pressed)  -- F1 Hotkey to hide the two overlays
+    if not pressed then
+     return
+    end
+    local source = obs.obs_get_source_by_name("Event A") -- disable text Source (Event A group)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+        obs.obs_source_release(source)        
+        if debug then
+            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Event A"))
+        end
+    end
+    local source = obs.obs_get_source_by_name("Event B") -- disable text Source (Event B group)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+        obs.obs_source_release(source)        
+        if debug then
+            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Event B"))
+        end
+    end
+    local source = obs.obs_get_source_by_name("Event 1") -- disable text Source (Event 1 group)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+        if debug then
+            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Event 1"))
+        end
+    end
+    obs.obs_source_release(source)
+    local source = obs.obs_get_source_by_name("Event 2") -- disable text Source (Event 2 group)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+        if debug then
+            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Event 2"))
+        end
+    end
+    obs.obs_source_release(source)
+    local source = obs.obs_get_source_by_name("TVBanner2") -- disable text Source (TVBanner2 group)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+        if debug then
+            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "TVBanner2"))
+        end
+    end
+    obs.obs_source_release(source)
+    local source = obs.obs_get_source_by_name("JudgeAwards") -- disable text Source (JudgeAwards group)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+        if debug then
+            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "JudgeAwards"))
+        end
+    end
+    obs.obs_source_release(source)
+    local source = obs.obs_get_source_by_name("SynchroJLabels11") -- disable text Source (SynchroJLabels11 group)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+        if debug then
+            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "SynchroJLabels11"))
+        end
+    end
+    obs.obs_source_release(source)
+    local source = obs.obs_get_source_by_name("SynchroJLabels9") -- disable text Source (SynchroJLabels9 group)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+        if debug then
+            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "SynchroJLabels9"))
+        end
+    end
+    obs.obs_source_release(source)    
+    local source = obs.obs_get_source_by_name("SynchroJLabels7") -- disable text Source (SynchroJLabels7 group)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+        if debug then
+            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "SynchroJLabels7"))
+        end
+    end
+    obs.obs_source_release(source)       
+    local source = obs.obs_get_source_by_name("SynchroJLabels5") -- disable text Source (SynchroJLabels5 group)
+    if source ~= nil then
+        obs.obs_source_set_enabled(source, false)
+        if debug then
+            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "SynchroJLabels5"))
+        end
+    end
+    obs.obs_source_release(source)       
+end  -- remove_overlays()
+
+function display_overlays(pressed)  -- F2 HotKey to show the two overlays; but not the Synchro Judge Labels
+    if not pressed then
+     return
+    end
+    -- tvBanner_remove()
+    if simultaneousEvents then
+        local source = obs.obs_get_source_by_name("Event A") -- enable source Event A
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Event_A"))
+            end
+        end
+        obs.obs_source_release(source)
+        local source = obs.obs_get_source_by_name("EventData_A") -- enable text source Event A
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "EventData_A"))
+            end
+        end
+        obs.obs_source_release(source)   
+        local source = obs.obs_get_source_by_name("Event B") -- enable Source Event B
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Event_B"))
+            end
+        end
+        obs.obs_source_release(source)
+        local source = obs.obs_get_source_by_name("EventData_B") -- enable text Source Event B
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "EventData_B"))
+            end
+        end
+        obs.obs_source_release(source)     
+    else
+        local source = obs.obs_get_source_by_name("Event 1") -- enable text Source (Event 1 group)
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Event 1"))
+            end
+        end
+        obs.obs_source_release(source)
+        local source = obs.obs_get_source_by_name("Event 2") -- enable text Source (Event 2 group)
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Event 2"))
+            end
+        end
+        obs.obs_source_release(source)
+
+    end
+end  -- display_overlays()
+
+function redisplay_overlays(pressed)  --  F3 Hotkey in single event mode to re display last update & in simultaneous event mode to clear Left Event info from the overlay
+    if not pressed then
+     return
+    end
+    if simultaneousEvents then         -- F3 to clear Left Event info from the overlay
+        local source = obs.obs_get_source_by_name("EventData_A") -- remove left data from display
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, false)
+            obs.obs_source_release(source)                
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source : EventData_A"))
+            end
+        end        
+        return
+    else   -- single event mode
+        if resultK[1] == "REFEREE" then
+            single_update(resultK)
+        end
+    end
+    obs.script_log(obs.LOG_INFO, string.format("F3 Hotkey to re display last update"))    
+end  -- redisplay_overlays()
+
+function do_nothing(pressed)  --   Hotkey dummy
+    if not pressed then
+     return
+    end
+    return
+    obs.script_log(obs.LOG_INFO, string.format("F3, Do Nothing!"))    
+end  -- do_nothing()
+
+function toggle_display_disable(pressed)  -- F5 Hotkey to permanently remove overlays
+    if not pressed then
+        return
+       end
+       if togglevar3 then
+          togglevar3 = false
+          disableUpdate = false  -- flip it back again
+          local source = obs.obs_get_source_by_name("Remove_Overlays") 
+          if source ~= nil then
+            local settings = obs.obs_data_create()
+            obs.obs_data_set_string(settings, "text", "Overlays Visable")
+            obs.obs_source_update(source, settings)
+            obs.obs_data_release(settings)
+            obs.obs_source_release(source)
+          end 
+          local source = obs.obs_get_source_by_name("F5_Function_Background_False") -- disable F5 background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, false)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F5_Function_Background_False"))
+              end
+          end
+          obs.obs_source_release(source)  
+          local source = obs.obs_get_source_by_name("F5_Function_Background_True") -- enable F5 background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, true)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F5_Function_Background_True"))
+              end
+          end
+          obs.obs_source_release(source)     
+       else 
+          togglevar3 = true
+          remove_overlays(true)
+          disableUpdate = true  -- toggle to disable
+          local source = obs.obs_get_source_by_name("Remove_Overlays") 
+          if source ~= nil then
+            local settings = obs.obs_data_create()
+            obs.obs_data_set_string(settings, "text", "Overlays NOT Visable")
+            obs.obs_source_update(source, settings)
+            obs.obs_data_release(settings)
+            obs.obs_source_release(source)
+          end  
+          local source = obs.obs_get_source_by_name("F5_Function_Background_True") -- disable F5 background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, false)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F5_Function_Background_True"))
+              end
+          end
+          obs.obs_source_release(source)  
+          local source = obs.obs_get_source_by_name("F5_Function_Background_False") -- enable F5 background
+          if source ~= nil then
+              obs.obs_source_set_enabled(source, true)
+              if debug then
+                  obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F5_Function_Background_False"))
+              end
+          end
+          obs.obs_source_release(source)    
+       end
+end -- toggle_display_disable()  
+
+function toggle_event_a_or_b(pressed)  -- F6 Hotkey in single event mode to toggle Event A or Event B and re-start & in simultaneous event mode to remove Right Event data
+    if not pressed then
+        return
+    end
+    if not simultaneousEvents then -- single event
+        if eventB then
+            eventB = false   -- is this still needed?
+            local source = obs.obs_get_source_by_name("A_B")  -- Event A
+            if source ~= nil then
+                local settings = obs.obs_data_create()
+                obs.obs_data_set_string(settings, "text", "Event A Shown")
+                obs.obs_source_update(source, settings)
+                obs.obs_data_release(settings)
+                obs.obs_source_release(source)
+            end 
+            local source = obs.obs_get_source_by_name("F6_Function_Background_False") -- disable F6 background
+            if source ~= nil then
+                obs.obs_source_set_enabled(source, false)
+                if debug then
+                    obs.script_log(obs.LOG_INFO, string.format("Disable_source : F6_Function_Background_False"))
+                end
+            end
+            obs.obs_source_release(source)  
+            local source = obs.obs_get_source_by_name("F6_Function_Background_True") -- enable F6 background
+            if source ~= nil then
+                obs.obs_source_set_enabled(source, true)
+                if debug then
+                    obs.script_log(obs.LOG_INFO, string.format("Enable_source : F6_Function_Background_True"))
+                end
+            end
+            obs.obs_source_release(source)     
+        else 
+            eventB = true
+            if synchro then               
+                return   -- Event B for Synchro not possible
+            end
+            local source = obs.obs_get_source_by_name("A_B") -- Event B
+            if source ~= nil then
+                local settings = obs.obs_data_create()
+                obs.obs_data_set_string(settings, "text", "Event B Shown")
+                obs.obs_source_update(source, settings)
+                obs.obs_data_release(settings)
+                obs.obs_source_release(source)
+            end   
+            local source = obs.obs_get_source_by_name("F6_Function_Background_True") -- disable F10 background
+            if source ~= nil then
+                obs.obs_source_set_enabled(source, false)
+                if debug then
+                    obs.script_log(obs.LOG_INFO, string.format("Disable_source : F6_Function_Background_True"))
+                end
+            end
+            obs.obs_source_release(source)  
+            local source = obs.obs_get_source_by_name("F6_Function_Background_False") -- enable F10 background
+            if source ~= nil then
+                obs.obs_source_set_enabled(source, true)
+                if debug then
+                    obs.script_log(obs.LOG_INFO, string.format("Enable_source : F6_Function_Background_False"))
+                end
+            end
+            obs.obs_source_release(source)   
+        end
+        init()  -- re-start the script
+    else  -- so simultaneous events
+        local source = obs.obs_get_source_by_name("EventData_B") -- remove Right Event data from display
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, false)
+            obs.obs_source_release(source)                
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source : EventData_B"))
+            end
+        end  
+    end
+end -- toggle_event_a_or_b()  
+
+function toggle_disable_of_autohide(pressed)  -- F8 Hotkey to toggle autohide disable
+    if not pressed then
+        return
+       end
+    if simultaneousEvents then 
+        hideDisable = true
+        return
+    else
+        local source = obs.obs_get_source_by_name("AutoHide") -- enable F8 function description
+        if source ~= nil then
+            obs.obs_source_set_enabled(source, true)
+            obs.obs_source_release(source)            
+            if debug then
+                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F8 Function description (AutoHide)"))
+            end
+        end
+        if hideDisable then
+            hideDisable = false
+            local source = obs.obs_get_source_by_name("AutoHide") 
+            if source ~= nil then
+                local settings = obs.obs_data_create()
+                obs.obs_data_set_string(settings, "text", "Auto-hide Enabled")
+                obs.obs_source_update(source, settings)
+                obs.obs_data_release(settings)
+                obs.obs_source_release(source)
+            end   
+            local source = obs.obs_get_source_by_name("F8_Function_Background_False") -- disable F8 background
+            if source ~= nil then
+                obs.obs_source_set_enabled(source, false)
+                obs.obs_source_release(source)                  
+                if debug then
+                    obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F8_Function_Background_False"))
+                end
+            end
+            local source = obs.obs_get_source_by_name("F8_Function_Background_True") -- enable F8 background
+            if source ~= nil then
+                obs.obs_source_set_enabled(source, true)
+                obs.obs_source_release(source)                  
+                if debug then
+                    obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F8_Function_Background_True"))
+                end
+            end
+        else 
+            hideDisable = true
+            local source = obs.obs_get_source_by_name("AutoHide") 
+            if source ~= nil then
+                local settings = obs.obs_data_create()
+                obs.obs_data_set_string(settings, "text", "Auto-hide Disabled")
+                obs.obs_source_update(source, settings)
+                obs.obs_data_release(settings)
+                obs.obs_source_release(source)
+            end  
+            local source = obs.obs_get_source_by_name("F8_Function_Background_True") -- disable F8 background
+            if source ~= nil then
+                obs.obs_source_set_enabled(source, false)
+                obs.obs_source_release(source)                
+                if debug then
+                    obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F8_Function_Background_True"))
+                end
+            end
+            local source = obs.obs_get_source_by_name("F8_Function_Background_False") -- enable F8 background
+            if source ~= nil then
+                obs.obs_source_set_enabled(source, true)
+                obs.obs_source_release(source)                
+                if debug then
+                    obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F8_Function_Background_False"))
+                end
+            end
+        end
+    end
+end -- toggle_disable_of_autohide()  
+
+function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-start script ***NOW NOT NEEDED BUT LEFT IN SCRIPT WITH SLIGHT SOURCE MODIFICATION TO REMOVE THE 'F9' LABEL**
+    -- Hotkey to toggle between the two event types  *No of judges displayed in the F9 status source is not generated here*
+    if not pressed then
+     return
+    end
+    if synchro then
+       synchro = false
+       local source = obs.obs_get_source_by_name("Event_Type") -- Event type: Individual
+       if source ~= nil then
+           local settings = obs.obs_data_create()
+           obs.obs_data_set_string(settings, "text", "Individual Event")
+           obs.obs_source_update(source, settings)
+           obs.obs_data_release(settings)
+           obs.obs_source_release(source)
+       end
+       local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- disable F9 background
+       if source ~= nil then
+           obs.obs_source_set_enabled(source, false)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F9_Function_Background_False"))
+           end
+       end
+       obs.obs_source_release(source)  
+       local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- enable F9 background
+       if source ~= nil then
+           obs.obs_source_set_enabled(source, true)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F9_Function_Background_True"))
+           end
+       end
+       obs.obs_source_release(source)          
+    else 
+       synchro = true
+       toggle_event_a_or_b(true)  -- Event B for Synchro not possible
+       local source = obs.obs_get_source_by_name("Event_Type") -- Event type: Synchro
+       if source ~= nil then
+           local settings = obs.obs_data_create()
+           obs.obs_data_set_string(settings, "text", "Synchro Event")
+           obs.obs_source_update(source, settings)
+           obs.obs_data_release(settings)
+           obs.obs_source_release(source)
+       end   
+       local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- disable F9 background
+       if source ~= nil then
+           obs.obs_source_set_enabled(source, false)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F9_Function_Background_True"))
+           end
+       end
+       obs.obs_source_release(source)  
+       local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- enable F9 background
+       if source ~= nil then
+           obs.obs_source_set_enabled(source, true)
+           if debug then
+               obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F9_Function_Background_False"))
+           end
+       end
+       obs.obs_source_release(source)       
+    end
+    init()  -- re-start the script
+end -- toggle_event_type()
 
 function toggle_event_position(pressed)  -- F10 Hotkey to toggle Event overlay or Event A or B positions
     if not pressed then
@@ -1598,7 +2043,6 @@ function toggle_event_position(pressed)  -- F10 Hotkey to toggle Event overlay o
     end 
 end -- toggle_event_position()
 
-
 function toggle_simultaneous_events(pressed)  -- F12 Hotkey to toggle Simultaneous Events                                         
     if not pressed then
         return
@@ -1628,22 +2072,22 @@ function toggle_simultaneous_events(pressed)  -- F12 Hotkey to toggle Simultaneo
                 obs.script_log(obs.LOG_INFO, string.format("Enable_source : F8 AutoHide"))
             end
         end
-        local source = obs.obs_get_source_by_name("F3_ClearEventA") -- disable 'F3_ClearLeftEvent' text 
+        local source = obs.obs_get_source_by_name("F3_ClearEventA") -- disable 'F3_ClearEventA' text 
         if source ~= nil then
             obs.obs_source_set_enabled(source, false)
             obs.obs_source_release(source)            
             if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Disable_source : F8_ClearEventA"))
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source : F3_ClearEventA"))
             end
         end
-        local source = obs.obs_get_source_by_name("F6_ClearEventB") -- disable 'F6_ClearRightEvent' text 
+        local source = obs.obs_get_source_by_name("F6_ClearEventB") -- disable 'F6_ClearEventB' text 
         if source ~= nil then
             obs.obs_source_set_enabled(source, false)
             obs.obs_source_release(source)            
             if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Disable_source : F6_ClearRightEvent"))
+                obs.script_log(obs.LOG_INFO, string.format("Disable_source : F6_ClearEventB"))
             end
-        end        
+        end      
         local source = obs.obs_get_source_by_name("A_B") -- enable F10 description
         if source ~= nil then
             obs.obs_source_set_enabled(source, true)
@@ -1910,7 +2354,8 @@ function toggle_simultaneous_events(pressed)  -- F12 Hotkey to toggle Simultaneo
                 obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Position2"))
             end
         end
-        toggle_event_position(true)        
+        toggle_event_position(true)
+        display_overlays(true)
         if debug then
             obs.script_log(obs.LOG_INFO, string.format("Simultaneous Events Selected"))
         end        
@@ -1919,458 +2364,6 @@ function toggle_simultaneous_events(pressed)  -- F12 Hotkey to toggle Simultaneo
         obs.script_log(obs.LOG_INFO, string.format("End of FS functions"))
     end 
 end  -- toggle_sumultanious_events
-
-
-function remove_overlays(pressed)  -- F1 Hotkey to hide the two overlays
-    if not pressed then
-     return
-    end
-    local source = obs.obs_get_source_by_name("Event A") -- disable text Source (Event A group)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-        obs.obs_source_release(source)        
-        if debug then
-            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Event A"))
-        end
-    end
-    local source = obs.obs_get_source_by_name("Event B") -- disable text Source (Event B group)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-        obs.obs_source_release(source)        
-        if debug then
-            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Event B"))
-        end
-    end
-    local source = obs.obs_get_source_by_name("Event 1") -- disable text Source (Event 1 group)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-        if debug then
-            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Event 1"))
-        end
-    end
-    obs.obs_source_release(source)
-    local source = obs.obs_get_source_by_name("Event 2") -- disable text Source (Event 2 group)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-        if debug then
-            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "Event 2"))
-        end
-    end
-    obs.obs_source_release(source)
-    local source = obs.obs_get_source_by_name("TVBanner2") -- disable text Source (TVBanner2 group)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-        if debug then
-            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "TVBanner2"))
-        end
-    end
-    obs.obs_source_release(source)
-    local source = obs.obs_get_source_by_name("JudgeAwards") -- disable text Source (JudgeAwards group)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-        if debug then
-            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "JudgeAwards"))
-        end
-    end
-    obs.obs_source_release(source)
-    local source = obs.obs_get_source_by_name("SynchroJLabels11") -- disable text Source (SynchroJLabels11 group)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-        if debug then
-            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "SynchroJLabels11"))
-        end
-    end
-    obs.obs_source_release(source)
-    local source = obs.obs_get_source_by_name("SynchroJLabels9") -- disable text Source (SynchroJLabels9 group)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-        if debug then
-            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "SynchroJLabels9"))
-        end
-    end
-    obs.obs_source_release(source)    
-    local source = obs.obs_get_source_by_name("SynchroJLabels7") -- disable text Source (SynchroJLabels7 group)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-        if debug then
-            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "SynchroJLabels7"))
-        end
-    end
-    obs.obs_source_release(source)       
-    local source = obs.obs_get_source_by_name("SynchroJLabels5") -- disable text Source (SynchroJLabels5 group)
-    if source ~= nil then
-        obs.obs_source_set_enabled(source, false)
-        if debug then
-            obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "SynchroJLabels5"))
-        end
-    end
-    obs.obs_source_release(source)       
-end  -- remove_overlays()
-
-
-function display_overlays(pressed)  -- F2 HotKey to show the two overlays; but not the Synchro Judge Labels
-    if not pressed then
-     return
-    end
-    -- tvBanner_remove()
-    if simultaneousEvents then
-        local source = obs.obs_get_source_by_name("Event A") -- enable source Event A
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, true)
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Event_A"))
-            end
-        end
-        obs.obs_source_release(source)
-        local source = obs.obs_get_source_by_name("EventData_A") -- enable text source Event A
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, true)
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "EventData_A"))
-            end
-        end
-        obs.obs_source_release(source)   
-        local source = obs.obs_get_source_by_name("Event B") -- enable Source Event B
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, true)
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Event_B"))
-            end
-        end
-        obs.obs_source_release(source)
-        local source = obs.obs_get_source_by_name("EventData_B") -- enable text Source Event B
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, true)
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "EventData_B"))
-            end
-        end
-        obs.obs_source_release(source)     
-    else
-        local source = obs.obs_get_source_by_name("Event 1") -- enable text Source (Event 1 group)
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, true)
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Event 1"))
-            end
-        end
-        obs.obs_source_release(source)
-        local source = obs.obs_get_source_by_name("Event 2") -- enable text Source (Event 2 group)
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, true)
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "Event 2"))
-            end
-        end
-        obs.obs_source_release(source)
-
-    end
-end  -- display_overlays()
-
-
-function redisplay_overlays(pressed)  --  F3 Hotkey in single event mode to re display last update & in simultaneous event mode to clear Left Event info from the overlay
-    if not pressed then
-     return
-    end
-    if simultaneousEvents then         -- F3 to clear Left Event info from the overlay
-        local source = obs.obs_get_source_by_name("EventData_A") -- remove left data from display
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, false)
-            obs.obs_source_release(source)                
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Disable_source : EventData_A"))
-            end
-        end        
-        return
-    else   -- single event mode
-        if resultK[1] == "REFEREE" then
-            single_update(resultK)
-        end
-    end
-    obs.script_log(obs.LOG_INFO, string.format("F3 Hotkey to re display last update"))    
-end  -- redisplay_overlays()
-
-function do_nothing(pressed)  --   Hotkey dummy
-    if not pressed then
-     return
-    end
-    return
-    obs.script_log(obs.LOG_INFO, string.format("F3, Do Nothing!"))    
-end  -- do_nothing()
-
-
-function toggle_event_type(pressed)  -- F9 Hotkey to toggle Event type and re-start script ***NOW NOT NEEDED BUT LEFT IN SCRIPT WITH SLIGHT SOURCE MODIFICATION TO REMOVE THE 'F9' LABEL**
-    -- Hotkey to toggle between the two event types  *No of judges displayed in the F9 status source is not generated here*
-    if not pressed then
-     return
-    end
-    if synchro then
-       synchro = false
-       local source = obs.obs_get_source_by_name("Event_Type") -- Event type: Individual
-       if source ~= nil then
-           local settings = obs.obs_data_create()
-           obs.obs_data_set_string(settings, "text", "Individual Event")
-           obs.obs_source_update(source, settings)
-           obs.obs_data_release(settings)
-           obs.obs_source_release(source)
-       end
-       local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- disable F9 background
-       if source ~= nil then
-           obs.obs_source_set_enabled(source, false)
-           if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F9_Function_Background_False"))
-           end
-       end
-       obs.obs_source_release(source)  
-       local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- enable F9 background
-       if source ~= nil then
-           obs.obs_source_set_enabled(source, true)
-           if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F9_Function_Background_True"))
-           end
-       end
-       obs.obs_source_release(source)          
-    else 
-       synchro = true
-       toggle_event_a_or_b(true)  -- Event B for Synchro not possible
-       local source = obs.obs_get_source_by_name("Event_Type") -- Event type: Synchro
-       if source ~= nil then
-           local settings = obs.obs_data_create()
-           obs.obs_data_set_string(settings, "text", "Synchro Event")
-           obs.obs_source_update(source, settings)
-           obs.obs_data_release(settings)
-           obs.obs_source_release(source)
-       end   
-       local source = obs.obs_get_source_by_name("F9_Function_Background_True") -- disable F9 background
-       if source ~= nil then
-           obs.obs_source_set_enabled(source, false)
-           if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F9_Function_Background_True"))
-           end
-       end
-       obs.obs_source_release(source)  
-       local source = obs.obs_get_source_by_name("F9_Function_Background_False") -- enable F9 background
-       if source ~= nil then
-           obs.obs_source_set_enabled(source, true)
-           if debug then
-               obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F9_Function_Background_False"))
-           end
-       end
-       obs.obs_source_release(source)       
-    end
-    init()  -- re-start the script
-end -- toggle_event_type()
-
-
-function toggle_display_disable(pressed)  -- F5 Hotkey to permanently remove overlays
-    if not pressed then
-        return
-       end
-       if togglevar3 then
-          togglevar3 = false
-          disableUpdate = false  -- flip it back again
-          local source = obs.obs_get_source_by_name("Remove_Overlays") 
-          if source ~= nil then
-            local settings = obs.obs_data_create()
-            obs.obs_data_set_string(settings, "text", "Overlays Visable")
-            obs.obs_source_update(source, settings)
-            obs.obs_data_release(settings)
-            obs.obs_source_release(source)
-          end 
-          local source = obs.obs_get_source_by_name("F5_Function_Background_False") -- disable F5 background
-          if source ~= nil then
-              obs.obs_source_set_enabled(source, false)
-              if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F5_Function_Background_False"))
-              end
-          end
-          obs.obs_source_release(source)  
-          local source = obs.obs_get_source_by_name("F5_Function_Background_True") -- enable F5 background
-          if source ~= nil then
-              obs.obs_source_set_enabled(source, true)
-              if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F5_Function_Background_True"))
-              end
-          end
-          obs.obs_source_release(source)     
-       else 
-          togglevar3 = true
-          remove_overlays(true)
-          disableUpdate = true  -- toggle to disable
-          local source = obs.obs_get_source_by_name("Remove_Overlays") 
-          if source ~= nil then
-            local settings = obs.obs_data_create()
-            obs.obs_data_set_string(settings, "text", "Overlays NOT Visable")
-            obs.obs_source_update(source, settings)
-            obs.obs_data_release(settings)
-            obs.obs_source_release(source)
-          end  
-          local source = obs.obs_get_source_by_name("F5_Function_Background_True") -- disable F5 background
-          if source ~= nil then
-              obs.obs_source_set_enabled(source, false)
-              if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F5_Function_Background_True"))
-              end
-          end
-          obs.obs_source_release(source)  
-          local source = obs.obs_get_source_by_name("F5_Function_Background_False") -- enable F5 background
-          if source ~= nil then
-              obs.obs_source_set_enabled(source, true)
-              if debug then
-                  obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F5_Function_Background_False"))
-              end
-          end
-          obs.obs_source_release(source)    
-       end
-end -- toggle_display_disable()  
-
-
-function toggle_disable_of_autohide(pressed)  -- F8 Hotkey to toggle autohide disable
-    if not pressed then
-        return
-       end
-    if simultaneousEvents then 
-        hideDisable = true
-        return
-    else
-        local source = obs.obs_get_source_by_name("AutoHide") -- enable F8 function description
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, true)
-            obs.obs_source_release(source)            
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F8 Function description (AutoHide)"))
-            end
-        end
-        if hideDisable then
-            hideDisable = false
-            local source = obs.obs_get_source_by_name("AutoHide") 
-            if source ~= nil then
-                local settings = obs.obs_data_create()
-                obs.obs_data_set_string(settings, "text", "Auto-hide Enabled")
-                obs.obs_source_update(source, settings)
-                obs.obs_data_release(settings)
-                obs.obs_source_release(source)
-            end   
-            local source = obs.obs_get_source_by_name("F8_Function_Background_False") -- disable F8 background
-            if source ~= nil then
-                obs.obs_source_set_enabled(source, false)
-                obs.obs_source_release(source)                  
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F8_Function_Background_False"))
-                end
-            end
-            local source = obs.obs_get_source_by_name("F8_Function_Background_True") -- enable F8 background
-            if source ~= nil then
-                obs.obs_source_set_enabled(source, true)
-                obs.obs_source_release(source)                  
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F8_Function_Background_True"))
-                end
-            end
-        else 
-            hideDisable = true
-            local source = obs.obs_get_source_by_name("AutoHide") 
-            if source ~= nil then
-                local settings = obs.obs_data_create()
-                obs.obs_data_set_string(settings, "text", "Auto-hide Disabled")
-                obs.obs_source_update(source, settings)
-                obs.obs_data_release(settings)
-                obs.obs_source_release(source)
-            end  
-            local source = obs.obs_get_source_by_name("F8_Function_Background_True") -- disable F8 background
-            if source ~= nil then
-                obs.obs_source_set_enabled(source, false)
-                obs.obs_source_release(source)                
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format("Disable_source : " .. "F8_Function_Background_True"))
-                end
-            end
-            local source = obs.obs_get_source_by_name("F8_Function_Background_False") -- enable F8 background
-            if source ~= nil then
-                obs.obs_source_set_enabled(source, true)
-                obs.obs_source_release(source)                
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format("Enable_source : " .. "F8_Function_Background_False"))
-                end
-            end
-        end
-    end
-end -- toggle_disable_of_autohide()  
-
-
-function toggle_event_a_or_b(pressed)  -- F6 Hotkey in single event mode to toggle Event A or Event B and re-start & in simultaneous event mode to remove Right Event data
-    if not pressed then
-        return
-    end
-    if not simultaneousEvents then -- single event
-        if eventB then
-            eventB = false   -- is this still needed?
-            local source = obs.obs_get_source_by_name("A_B")  -- Event A
-            if source ~= nil then
-                local settings = obs.obs_data_create()
-                obs.obs_data_set_string(settings, "text", "Event A Shown")
-                obs.obs_source_update(source, settings)
-                obs.obs_data_release(settings)
-                obs.obs_source_release(source)
-            end 
-            local source = obs.obs_get_source_by_name("F6_Function_Background_False") -- disable F6 background
-            if source ~= nil then
-                obs.obs_source_set_enabled(source, false)
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format("Disable_source : F6_Function_Background_False"))
-                end
-            end
-            obs.obs_source_release(source)  
-            local source = obs.obs_get_source_by_name("F6_Function_Background_True") -- enable F6 background
-            if source ~= nil then
-                obs.obs_source_set_enabled(source, true)
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format("Enable_source : F6_Function_Background_True"))
-                end
-            end
-            obs.obs_source_release(source)     
-        else 
-            eventB = true
-            if synchro then               
-                return   -- Event B for Synchro not possible
-            end
-            local source = obs.obs_get_source_by_name("A_B") -- Event B
-            if source ~= nil then
-                local settings = obs.obs_data_create()
-                obs.obs_data_set_string(settings, "text", "Event B Shown")
-                obs.obs_source_update(source, settings)
-                obs.obs_data_release(settings)
-                obs.obs_source_release(source)
-            end   
-            local source = obs.obs_get_source_by_name("F6_Function_Background_True") -- disable F10 background
-            if source ~= nil then
-                obs.obs_source_set_enabled(source, false)
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format("Disable_source : F6_Function_Background_True"))
-                end
-            end
-            obs.obs_source_release(source)  
-            local source = obs.obs_get_source_by_name("F6_Function_Background_False") -- enable F10 background
-            if source ~= nil then
-                obs.obs_source_set_enabled(source, true)
-                if debug then
-                    obs.script_log(obs.LOG_INFO, string.format("Enable_source : F6_Function_Background_False"))
-                end
-            end
-            obs.obs_source_release(source)   
-        end
-        init()  -- re-start the script
-    else  -- so simultaneous events
-        local source = obs.obs_get_source_by_name("EventData_B") -- remove Right Event data from display
-        if source ~= nil then
-            obs.obs_source_set_enabled(source, false)
-            obs.obs_source_release(source)                
-            if debug then
-                obs.script_log(obs.LOG_INFO, string.format("Disable_source : EventData_B"))
-            end
-        end  
-    end
-end -- toggle_event_a_or_b()  
 
 
 function remove_TVbanner()  -- this removes the overlay under timer control
@@ -2860,7 +2853,7 @@ end
 -- The function named "script_description" returns the description shown to the user
 function script_description()
     return [[<center><h2>Display DiveRecorder Data as a Video Overlay or Overlays</h></center>
-             <p>Display diver and scores from DiveRecorder for single individual or synchro diving event or simultaneous individual events.  The approporate OBS Source (.json) file must be imported into OBS for this video overlay to function correctly. You must be connected to the same Class C sub-net as the DR computers. </p><p>Andy - V3.3.2 2023NOV23</p>]]
+             <p>Display diver and scores from DiveRecorder for single individual or synchro diving event or simultaneous individual events.  The approporate OBS Source (.json) file must be imported into OBS for this video overlay to function correctly. You must be connected to the same Class C sub-net as the DR computers. </p><p>Andy - V3.3.2 2023NOV26</p>]]
 end
 
 -- The function named script_properties defines the properties that the user can change for the entire script module itself
