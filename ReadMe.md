@@ -165,3 +165,5 @@ Touch Portal, all for iPhone and I guess for other portable devices as well.  No
 require a WiFi connection, something not generally used for a Diverecorder set-up!
 
 Make the main overlay dynamic in its length so as to remove the 'white space' when events have a reduced number of judges.
+
+Implement a slow motion replay capability, perhaps using a Stream Deck (as I now have one...).
