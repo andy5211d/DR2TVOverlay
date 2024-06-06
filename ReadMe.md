@@ -1,6 +1,6 @@
 # Description
-(** The following needs major update now Simultaneous Mode has been implemented.  Diagrams below only show Single event mode
-at present **)
+(** The following needs major update now Simultaneous Mode has been implemented.  Screen shots below only show Single event
+mode at present **)
 
 DR2TVOverlay is an extension for [OBS Studio](https://obsproject.com/) built on top of its scripting facilities utilising the built-in embedded LuaJIT
 interpreter. This Lua script uses a number of OBS-Studio Sources to display the event information from [DiveRecorder](https://www.diverecorder.co.uk) (DR) onto
