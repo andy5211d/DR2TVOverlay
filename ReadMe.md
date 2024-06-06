@@ -160,6 +160,8 @@ Synchro events only 9 and 11 judges are supported (although 7 and 5 may work, no
 Figure out why the Hotkeys do not start in a known state!  Sometimes the settings are not what the 'Hotkeys' status dock
 show on first run!  User needs to toggle each a few times to 'synch' with the status display.  
 
+Update and add screen shots to show Simultaneous Mode.
+
 Configure a useful remote control capability for OBS-Studio.  Several apps are available such as UPDeck, OBS Blade and
 Touch Portal, all for iPhone and I guess for other portable devices as well.  Not used either for an event, yet, and would
 require a WiFi connection, something not generally used for a Diverecorder set-up!
