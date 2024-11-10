@@ -1,1 +1,3 @@
-
+Diagrams may not be completely accurate as the Lua script is continualy developed.  
+Happy to receive any comments and suggestions and would love to know how to Lua code a HotKey using
+the Ctrl key.  
