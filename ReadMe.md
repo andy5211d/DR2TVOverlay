@@ -9,9 +9,8 @@ the live event video stream.  To use this script the user will need to be reason
 The script uses the data provided by DR's UDP data broadcasts.  Once running the script automatically checks the UDP data
 and if a change is detected displays the new information.  The user has the capability to automatically hide the dive 
 information overlay and re-display it when DR sends new data.  Works for both Individual events and Synchro events and a 
-variable number of judges.  The script works with simultaneous events (A & B) however the user must select which event the
-overlay is for.  A future version may show limited information for both events.  The script does NOT work for a skills
-circuit!
+variable number of judges.  The script now works with simultaneous events (A & B).  The script does NOT work for a skills
+circuit (single event, two or three position circuit)!
 
 The information overlay uses two Mono type fonts which need to be loaded on the PC, else the Judge awards alignment will
 be wrong and some data maybe outside the video overlay area (see Installation notes below).  This script will not function 
