@@ -149,7 +149,7 @@ and when the awards are shown:
 ![gif](/gifs/SynchroAwards.gif)
 
 For the Simultaneous Events mode the overlays will look something like this:
-![png](/gifs/Screenshot 2024-11-11 144519.png)
+![gif](/gifs/Screenshot 2024-11-11 144519.gif)
 
 The script will automatically cater for a differing number of judges with a minimum of 5 for individual events, for
 Synchro events only 9 and 11 judges are supported (although 7 and 5 may work, not tested).  
