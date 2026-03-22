@@ -1,5 +1,5 @@
 # Description
-(** The following needs major update now Simultaneous Mode has been implemented.  Some screen shots below only show Single
+(** The following needs major update now Simultaneous Mode has been implemented.  Screen shots below only show Single
 event mode at present **)
 
 DR2TVOverlay is an extension for [OBS Studio](https://obsproject.com/) built on top of its scripting facilities utilising the built-in embedded LuaJIT
@@ -10,7 +10,7 @@ The script uses the data provided by DR's UDP data broadcasts.  Once running the
 and if a change is detected displays the new information.  The user has the capability to automatically hide the dive 
 information overlay and re-display it when DR sends new data.  Works for both Individual events and Synchro events and a 
 variable number of judges.  The script now works with simultaneous events (A & B) and will show the data from both events
-overlayed on the video.  The script does NOT work for a skills circuit (single event, two or three position circuit)!
+overlayed on the video but with a different layout.  The script does NOT work for a skills circuit (single event two or three position circuit)!
 
 The information overlay uses two Mono type fonts which need to be loaded on the PC, else the Judge awards alignment will
 be wrong and some data maybe outside the video overlay area (see Installation notes below).  This script will not function 
@@ -23,12 +23,12 @@ Most user functions can be controlled by hotkeys, as follows:
 
     F2 = Temporary show overlays (until next Diverecorder update and the timeout period)
 
-    F3 = Re-display dive information.  In Simultaneous Events mode remove Left Event text
+    F3 = Re-display dive information.  In Simultaneous Events mode remove the Left Event text
 
     F5 = Permanently remove all overlays
 
     F6 = Toggle to display Event A or Event B (there is no Event B option for Synchro). In Simultaneous
-         Events mode remove right Event text
+         Events mode remove the Right Event text
 
     F8 = Disable auto-hide of overlays.  Not used in Simultaneous Events mode
 
@@ -48,7 +48,7 @@ Diverecorder certainly will not!).
 proportional font is used the data may extend out of the 'Overlay' bounds or more likely not line-up with other displayed 
 data.  The two fonts used are 'DejaVu Sans Mono Book' and 'Monofonto Regular'.  Other monotype fonts may work.
 
-- Download and install Exeldro's [Source Dock](https://obsproject.com/forum/resources/source-dock.1317/), [Gradient Source](https://obsproject.com/forum/resources/gradient-source.1172/) and from Palakis [obs-websocket](https://obsproject.com/forum/resources/obs-websocket-remote-control-obs-studio-from-websockets.466/) add-ins to OBS-Studio.
+- Download and install Exeldro's [Source Dock](https://obsproject.com/forum/resources/source-dock.1317/), and [Gradient Source](https://obsproject.com/forum/resources/gradient-source.1172/) add-ins to OBS-Studio.
 
 - Download zip file from (https://github.com//andy5211d/DR2TVOverlay), unpack/unzip.
 
@@ -57,7 +57,8 @@ data.  The two fonts used are 'DejaVu Sans Mono Book' and 'Monofonto Regular'.  
     Add 'divingoverlaysV3.x.x.lua' to OBS Studio via Tools>Scripts > "+" button (script needs to be placed in 
     the C:\Program Files\obs-studio\data\obs-plugins\frontend-tools\scripts folder)
 
-    Import 'basic.ini' to OBS-Studio via Profile>Import and select the required .ini file
+    Import 'basic.ini' to OBS-Studio via Profile>Import and select the required .ini file (don't think this is needed with
+    current version of OBS).
 
     Import 'divingoverlays-obssourceV3.x.x.json' to OBS Studio via Scene Collection>Import and select the required .json file
 
@@ -72,7 +73,7 @@ The flag file location mapping in OBS-Studio DR2TVOverlay script:
 
 ![gif](/gifs/OBSscriptfilelocations.gif)
 
-Errors in file mapping are the usual cause of the divers country or club flags not being shown.   
+Errors in file mapping are the usual cause of the divers country or club flag not being shown.   
 
 Your video settings may be different and will be dependent upon the camera you use and the bandwidth available for the stream
 out to the internet and the performance of the computer used for streaming.  These are the settings that seem to work well
@@ -97,8 +98,8 @@ There are no other settings necessary as this OBS script receives the UDP data b
 instances.  Event A or Event B should be selected as necessary if more than one event is running or of course simultaneous 
 event mode to display both.  This script does NOT work for a skills circuit!
 
-The default start-up of the script has the following settings: (does not seem to be consistent, toggle each a few times 
-after start-up!)
+The default start-up of the script has the following settings (Does not seem to be consistent, toggle each Function Key a
+few times after start-up to ensure correct mode! The function key background colour will give a clue as to its state):
 - Single Event Mode (F12)
 - Individual Event (F9 but now automaticly selected)
 - Event A (F6)
@@ -107,7 +108,8 @@ after start-up!)
 - Overlay Update enabled (F3)
 - Overlays Visible (F5)
 
-If the initialisation has gone correctly then the Hotkey status dock will look something like this:
+If the initialisation has gone correctly then the Hotkey status dock will look something like this (you may need to
+reposition the source dock):
 ![gif](/gifs/hotkeystatusdock.gif)
 
 The user should use the Hotkeys to change the mode of operation as desired.  In most cases F10 is only needed
