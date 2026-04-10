@@ -292,11 +292,13 @@ local function single_update(v)
     tvBanner_removed = false -- as we are about to display dive data or awards!  
 
     -- produce the event information display
-    if synchro then
-        local event_info = (" " .. split_string2[60] .. " \n Team " .. split_string2[8] .. "/" .. split_string2[64] .. "  Round " .. split_string2[6] .. "/" .. split_string2[63] .. " ")
-    else
-        local event_info = (" " .. split_string2[60] .. " \n Diver " .. split_string2[8] .. "/" .. split_string2[64] .. "  Round " .. split_string2[6] .. "/" .. split_string2[63] .. " ")
-    end
+    
+    local label = synchro and "Team" or "Diver"
+    local event_info =
+        " " .. split_string2[60] ..
+        " \n " .. label .. " " .. split_string2[8] .. "/" .. split_string2[64] ..
+        "  Round " .. split_string2[6] .. "/" .. split_string2[63] .. " "
+ 
     local source = obs.obs_get_source_by_name("EventData") -- Display event data
     if source ~= nil then
     local settings = obs.obs_data_create()
