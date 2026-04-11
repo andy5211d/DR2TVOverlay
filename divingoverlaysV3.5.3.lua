@@ -1036,10 +1036,10 @@ local function single_update(v)
             end
         end
 
-        if     split_string2[14] == "A" then position = (" straight")
-        elseif split_string2[14] == "B" then position = (" piked")
-        elseif split_string2[14] == "C" then position = (" tucked")
-        elseif split_string2[14] == "D" then position = (" free position")
+        if     split_string2[14] == "A" then position = (" Straight")
+        elseif split_string2[14] == "B" then position = (" Piked")
+        elseif split_string2[14] == "C" then position = (" Tucked")
+        elseif split_string2[14] == "D" then position = (" Free position")
         end
 
         if split_string2[16] == "5" or split_string2[16] == "7½" or split_string2[16] == "7.5" or split_string2[16] == "10" then 
